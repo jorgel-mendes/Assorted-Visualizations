@@ -3,8 +3,9 @@ title: "Tidy Tuesday 06/08/2019"
 output:
   html_document: 
     df_print: paged
-    self_contained: false
-    keep_md: true
+  github_document:
+    df_print: kable
+    html_preview: false
 ---
 
 # Data description
@@ -195,28 +196,28 @@ I didn't discover how to make annotations, so I tried to give the minimum releva
 
 ```{r message=FALSE, warning=FALSE, dpi = 130, fig.align="center"}
 #create visualization
-#Html content
+#Html content. Not run in the md.
 visNetwork(nodes_chose, edges,
            main = list( text = "What elements does Bob Ross paint together?",
                         style = 'font-family:Georgia, Times New Roman, Times, serif;
-                        font-weight:bold;font-size:20px;text-align:left;color:slategray;'           
+                        font-weight:bold;font-size:20px;text-align:left;color:slategray;'
                         ),
            submain = list(text = 'Close circles have similar pairings, large circles are common elements, thick lines are common pairings' ,
                           style ='font-family:Georgia, Times New Roman, Times, serif;
                           font-size:13px;text-align:left;color:slategray'
                           )
-           )%>% 
-  visNodes(color = list(background = "steelblue", 
+           )%>%
+  visNodes(color = list(background = "steelblue",
                         border = "lightblue",
                         highlight = "orange"),
            font = list(size = 16)
-           ) %>% 
+           ) %>%
   visEdges(color = list(color = "lightblue", highlight = "steelblue")
            ) %>%
   visPhysics(solver = "forceAtlas2Based",
              forceAtlas2Based = list(gravitationalConstant = -22)
-             )%>% 
-  visLayout(randomSeed = 100) %>% 
+             )%>%
+  visLayout(randomSeed = 100) %>%
   visInteraction(navigationButtons = TRUE)
 ```
 
