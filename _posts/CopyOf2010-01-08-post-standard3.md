@@ -1,5 +1,5 @@
 ---
-title: "Tidy Tuesday test 06/08/2019"
+title: "Tidy Tuesday 06/08/2019"
 excerpt_separator: "<!--more-->"
 categories:
   - Blog
@@ -7,7 +7,6 @@ tags:
   - Post Formats
   - readability
   - standard
-visNetwork: true
 ---
 
 # Data description
