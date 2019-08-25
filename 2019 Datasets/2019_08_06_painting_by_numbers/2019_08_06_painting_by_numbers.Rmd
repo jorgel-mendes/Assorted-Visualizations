@@ -7,6 +7,7 @@ output:
   github_document:
     df_print: kable
     html_preview: false
+always_allow_html: yes
 ---
 
 # Data description
