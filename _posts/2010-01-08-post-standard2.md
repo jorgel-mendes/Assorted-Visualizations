@@ -7,6 +7,7 @@ tags:
   - Post Formats
   - readability
   - standard
+visNetwork: true
 ---
 
 # Data description
