@@ -1,24 +1,32 @@
 ---
-title: "Roman Emperors 13/08/2019"
+title: "Tidy Tuesday 13/08/2019"
 output:
   github_document: 
     df_print: kable
 always_allow_html: yes
 ---
 
+```{r opts, echo = FALSE}
+figs_path <- paste0(here::here("docs", "assets", "images"),"/")
+knitr::opts_chunk$set(
+  fig.path = figs_path
+)
+```
+
 # Data description
 
-Information about Roman emperors such as their birth date and place, reign start and end, death cause and others.
+From From [TidyTuesdays github](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-08-13):
+
+> Information about Roman emperors such as their birth date and place, reign start and end, death cause and others.
 
 # Import data and packages
 
 ```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(treemapify)
 # emperors <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-08-13/emperors.csv")
 # readr::write_csv(emperors, "emperors.csv")
 emperors <- readr::read_csv("emperors.csv")
-
-library(tidyverse)
-library(treemapify)
 ```
 
 # Data 
@@ -27,7 +35,7 @@ Since it's a small dataset, I'll look it with Rstudio Viewer.
 
 ```{r}
 #View(emperors)
-head(emperors)
+str(emperors, give.attr = FALSE)
 ```
 
 Most of the data is date or categorical. I'm curious about how many different death causes and killers we have.
@@ -40,8 +48,9 @@ emperors_ck <- emperors %>%
 summary(emperors_ck)
 ```
 
-So we have just 7 death causes and some varied killer motives.
+So we have just 7 death causes and some varied killer motives, so I can create a treemap to display this information.
 
+Creating a data frame with the relevant information for the treemap.
 
 ```{r}
 emperors_ck <- emperors_ck %>% 
@@ -51,11 +60,14 @@ emperors_ck <- emperors_ck %>%
   summarise(value = n())
 ```
 
+Creating the treemap with treemapify package.
 
-```{r}
-ggplot(emperors_ck, aes(area = value, fill = parent, label = id, subgroup = parent))+
+```{r rem_treemap}
+ggplot(emperors_ck, aes(area = value, fill = parent,
+                        label = id, subgroup = parent))+
   geom_treemap() +
-  geom_treemap_text(place = 'topleft', min.size = 8, reflow = T) +
+  geom_treemap_text(place = 'topleft', min.size = 8, 
+                    reflow = T) +
   geom_treemap_subgroup_text(
     alpha = 0.5, place = 'bottomleft'
   ) +
