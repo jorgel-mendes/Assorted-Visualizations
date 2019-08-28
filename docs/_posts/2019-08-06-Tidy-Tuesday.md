@@ -1,43 +1,44 @@
 ---
-title: "Tidy Tuesday test 06/08/2019"
+title: "Tidy Tuesday 06/08/2019 Painting by Numbers"
 excerpt_separator: "<!--more-->"
 categories:
   - Blog
 tags:
-  - Post Formats
-  - readability
-  - standard
+  - Tidy Tuesday
+  - Network Graphs
+  - Interactive Graphs
+  - visNetwork
+  - ggraph
 visNetwork: true
 ---
 
 # Data description
 
-Each of the columns after episode/title correspond to the binary presence (0 or 1) of that element in the painting.
+From [TidyTuesdays github](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-08-06):
+>Each of the columns after episode/title correspond to the binary presence (0 or 1) of that element in the painting.
 
 # Import data and packages
 
 
 ```r
+library(tidyverse) #data manipulation and ggplot
+library(visNetwork) #interactive network
+library(igraph) #still newtork
+library(tidygraph) #still newtork
+library(ggraph) #still newtork
+library(Cairo) #render the still newtork
+
 #bob_ross <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-08-06/bob-ross.csv")
 #write_csv(bob_ross, "boss_ross.csv")
 bob_ross <- readr::read_csv("boss_ross.csv")
-
-
-library(tidyverse)
-library(visNetwork)
-library(igraph)
-library(tidygraph)
-library(ggraph)
-library(Cairo)
 ```
 
 # Data 
 
+Using the recommended steps to break apart the seasons and episodes. Also removing the frame elements.
+
 
 ```r
-#recommended step to clean episode information and frame elements
-#I'll only work with the paintings
-
 bob_ross <- bob_ross %>% 
   janitor::clean_names() %>% 
   separate(episode, into = c("season", "episode"), sep = "E") %>% 
@@ -71,7 +72,7 @@ bob_ross <- bob_ross %>%
 
 # EDA
 
-Now a little exploratory analysis.
+Now a little peek into the data.
 
 
 ```r
@@ -85,7 +86,7 @@ bob_ross %>%
   coord_flip()
 ```
 
-![](2019_08_06_painting_by_numbers_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
+![](/docs/assets/images/pnb_eda_1-1.png)<!-- -->
 
 So tree, and trees, are the most common elements. The top 10 elements in general are related with nature, landscapes and backgrounds.
 
@@ -104,13 +105,15 @@ bob_ross %>%
   summarise_all(sum)
 ```
 
-<div data-pagedtable="false">
-  <script data-pagedtable-source type="application/json">
-{"columns":[{"label":["only_tree"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["only_trees"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["both_tree_trees"],"name":[3],"type":["dbl"],"align":["right"]}],"data":[{"1":"24","2":"0","3":"337"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
+<div class="kable-table">
+
+ only_tree   only_trees   both_tree_trees
+----------  -----------  ----------------
+        24            0               337
+
 </div>
 
-So trees is not very informative, since it only says if more than one tree is in the picture and not a really new element. Let's take away this element and refer to tree as "at least one tree". And let's do the same for mountains.
+Trees is not very informative, since it only says if more than one tree is in the picture and not a really new element. I'll take away this element and refer to tree as "at least one tree". And let's do the same for mountains.
 
 
 ```r
@@ -118,7 +121,7 @@ bob_ross <- bob_ross %>%
   filter(element != "trees", element != "mountains")
 ```
 
-
+For this data I chose to represent the most common association of elements, so I'll use a network graph.
 
 # Network graph
 
@@ -160,7 +163,7 @@ edges_i <- bob_ross %>%
   select(-c(presence,count_el))
 
 #Creates a table of top 100 connections and their sizes
-edges_l <- edges_i %>% 
+edges <- edges_i %>% 
   inner_join(edges_i, by = c("season", "episode")) %>% 
   dplyr::filter(element.x != element.y) %>% 
   group_by(grp = paste(pmax(element.x, element.y), pmin(element.x, element.y), sep = "_"), season, episode) %>%
@@ -173,7 +176,7 @@ edges_l <- edges_i %>%
   top_n(100, value)
 
 #Label the connections correctly
-edges <- edges_l %>% 
+edges <- edges %>% 
   left_join(nodes, by = c("element.x" = "label")) %>% 
   rename(from = id) %>% 
   left_join(nodes, by = c("element.y" = "label")) %>% 
@@ -186,22 +189,23 @@ Then we'll look into the nodes again to only select the nodes that appear in the
 
 ```r
 #Get only the nodes that are in the top 100 connections
-nodes_chose <- nodes %>% 
+nodes_chosen <- nodes %>% 
   dplyr::filter(id %in% c(edges$from, edges$to))
 
 #Variable for size of the nodes
-nodes_chose$size <- bob_ross %>% 
+nodes_chosen$size <- bob_ross %>% 
   dplyr::filter(presence == 1) %>% 
   count(element) %>% 
-  inner_join(nodes_chose, by = c("element" = "label")) %>% 
+  inner_join(nodes_chosen, by = c("element" = "label")) %>% 
   .$n/10
 ```
 
 
 ## Create the interactive network
 
-With visNetwork package it's easy to create a network element. But we have to try it some times to choose a good seed and solver algorithm and parameters.
-I didn't discover how to make annotations, so I tried to give the minimum relevant information in title and subtitle. And fade them a little so they don't take attention away from the data.
+With visNetwork package it's easy to create a network element. But I had to try it some times to choose a good seed and solver algorithm and parameters. I did also some modifications of some css elements to make the plot look better, they don't change the plot made in the .Rmd or in R but they are displayed in the html document.
+
+I haven't found a way to make annotations, so I tried to give the minimum relevant information in the title and subtitle. And fade them a little so they don't take attention away from the data.
 
 <style type="text/css">
 /*A little CSS to make the plot look better*/
@@ -221,12 +225,13 @@ I didn't discover how to make annotations, so I tried to give the minimum releva
 ```r
 #create visualization
 #Html content. Not run in the md.
-visNetwork(nodes_chose, edges,
+visNetwork(nodes_chosen, edges,
            main = list( text = "What elements does Bob Ross paint together?",
                         style = 'font-family:Georgia, Times New Roman, Times, serif;
                         font-weight:bold;font-size:20px;text-align:left;color:slategray;'
                         ),
-           submain = list(text = 'Close circles have similar pairings, large circles are common elements, thick lines are common pairings' ,
+           submain = list(text = 'Close circles have similar pairings, large circles are 
+                          common elements, thick lines are common pairings' ,
                           style ='font-family:Georgia, Times New Roman, Times, serif;
                           font-size:13px;text-align:left;color:slategray'
                           )
@@ -245,13 +250,15 @@ visNetwork(nodes_chose, edges,
   visInteraction(navigationButtons = TRUE)
 ```
 
-<!--html_preserve--><div id="htmlwidget-c49a8c025817425dbd77" style="width:910px;height:650px;" class="visNetwork html-widget"></div>
-<script type="application/json" data-for="htmlwidget-c49a8c025817425dbd77">{"x":{"nodes":{"id":[3,7,8,10,12,13,14,15,23,26,30,32,34,37,38,39,40,42,43,44,45,46,48],"label":["beach","bushes","cabin","cirrus","clouds","conifer","cumulus","deciduous","grass","lake","mountain","ocean","path","river","rocks","snow","snowy_mountain","structure","sun","tree","waterfall","waves","winter"],"size":[2.7,12,6.9,2.8,17.9,21.2,8.6,22.7,14.2,14.3,16,3.6,4.9,12.6,7.7,7.5,10.9,8.5,4,36.1,3.9,3.4,6.9]},"edges":{"from":[3,3,3,7,7,7,7,7,7,7,7,7,7,8,8,8,8,8,8,8,8,10,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,13,13,13,13,13,13,13,13,13,13,13,13,14,14,14,14,14,14,15,15,15,15,15,15,15,15,15,15,15,15,23,23,23,23,23,23,26,26,26,26,26,30,30,30,30,30,32,34,37,37,37,37,38,39,39,39,39,40,42,42,43,44,44],"to":[12,32,46,12,13,14,15,23,26,30,37,40,44,12,13,15,26,39,42,44,48,12,13,14,15,23,26,30,32,37,38,39,40,42,44,46,48,14,15,23,26,30,37,38,39,40,42,44,48,15,23,26,30,40,44,23,26,30,34,37,38,39,40,42,43,44,48,26,30,37,38,40,44,30,39,40,42,44,37,39,40,44,48,46,44,38,40,44,45,44,40,42,44,48,44,44,48,44,45,48],"value":[25,27,26,54,75,32,72,43,55,63,45,46,120,30,50,44,25,28,60,69,29,27,100,83,84,57,62,86,32,51,43,32,59,35,147,30,28,47,82,68,92,129,68,34,56,94,50,212,53,45,30,37,46,33,74,98,83,67,38,83,37,40,41,59,25,227,36,44,60,61,28,35,136,81,25,58,29,142,49,29,109,156,29,34,45,37,33,126,34,60,25,33,75,67,108,84,33,32,39,69]},"nodesToDataframe":true,"edgesToDataframe":true,"options":{"width":"100%","height":"100%","nodes":{"shape":"dot","color":{"background":"steelblue","border":"lightblue","highlight":"orange"},"font":{"size":16}},"manipulation":{"enabled":false},"edges":{"color":{"color":"lightblue","highlight":"steelblue"}},"physics":{"solver":"forceAtlas2Based","forceAtlas2Based":{"gravitationalConstant":-22}},"layout":{"randomSeed":100},"interaction":{"navigationButtons":true}},"groups":null,"width":null,"height":null,"idselection":{"enabled":false},"byselection":{"enabled":false},"main":{"text":"What elements does Bob Ross paint together?","style":"font-family:Georgia, Times New Roman, Times, serif;\n                        font-weight:bold;font-size:20px;text-align:left;color:slategray;"},"submain":{"text":"Close circles have similar pairings, large circles are common elements, thick lines are common pairings","style":"font-family:Georgia, Times New Roman, Times, serif;\n                          font-size:13px;text-align:left;color:slategray"},"footer":null,"background":"rgba(0, 0, 0, 0)","tooltipStay":300,"tooltipStyle":"position: fixed;visibility:hidden;padding: 5px;white-space: nowrap;font-family: verdana;font-size:14px;font-color:#000000;background-color: #f5f4ed;-moz-border-radius: 3px;-webkit-border-radius: 3px;border-radius: 3px;border: 1px solid #808074;box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.2);"},"evals":[],"jsHooks":[]}</script><!--/html_preserve-->
+<!--html_preserve--><div id="htmlwidget-a64fd56f4f78b5323f65" style="width:910px;height:650px;" class="visNetwork html-widget"></div>
+<script type="application/json" data-for="htmlwidget-a64fd56f4f78b5323f65">{"x":{"nodes":{"id":[3,7,8,10,12,13,14,15,23,26,30,32,34,37,38,39,40,42,43,44,45,46,48],"label":["beach","bushes","cabin","cirrus","clouds","conifer","cumulus","deciduous","grass","lake","mountain","ocean","path","river","rocks","snow","snowy_mountain","structure","sun","tree","waterfall","waves","winter"],"size":[2.7,12,6.9,2.8,17.9,21.2,8.6,22.7,14.2,14.3,16,3.6,4.9,12.6,7.7,7.5,10.9,8.5,4,36.1,3.9,3.4,6.9]},"edges":{"from":[3,3,3,7,7,7,7,7,7,7,7,7,7,8,8,8,8,8,8,8,8,10,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,13,13,13,13,13,13,13,13,13,13,13,13,14,14,14,14,14,14,15,15,15,15,15,15,15,15,15,15,15,15,23,23,23,23,23,23,26,26,26,26,26,30,30,30,30,30,32,34,37,37,37,37,38,39,39,39,39,40,42,42,43,44,44],"to":[12,32,46,12,13,14,15,23,26,30,37,40,44,12,13,15,26,39,42,44,48,12,13,14,15,23,26,30,32,37,38,39,40,42,44,46,48,14,15,23,26,30,37,38,39,40,42,44,48,15,23,26,30,40,44,23,26,30,34,37,38,39,40,42,43,44,48,26,30,37,38,40,44,30,39,40,42,44,37,39,40,44,48,46,44,38,40,44,45,44,40,42,44,48,44,44,48,44,45,48],"value":[25,27,26,54,75,32,72,43,55,63,45,46,120,30,50,44,25,28,60,69,29,27,100,83,84,57,62,86,32,51,43,32,59,35,147,30,28,47,82,68,92,129,68,34,56,94,50,212,53,45,30,37,46,33,74,98,83,67,38,83,37,40,41,59,25,227,36,44,60,61,28,35,136,81,25,58,29,142,49,29,109,156,29,34,45,37,33,126,34,60,25,33,75,67,108,84,33,32,39,69]},"nodesToDataframe":true,"edgesToDataframe":true,"options":{"width":"100%","height":"100%","nodes":{"shape":"dot","color":{"background":"steelblue","border":"lightblue","highlight":"orange"},"font":{"size":16}},"manipulation":{"enabled":false},"edges":{"color":{"color":"lightblue","highlight":"steelblue"}},"physics":{"solver":"forceAtlas2Based","forceAtlas2Based":{"gravitationalConstant":-22}},"layout":{"randomSeed":100},"interaction":{"navigationButtons":true}},"groups":null,"width":null,"height":null,"idselection":{"enabled":false},"byselection":{"enabled":false},"main":{"text":"What elements does Bob Ross paint together?","style":"font-family:Georgia, Times New Roman, Times, serif;\n                        font-weight:bold;font-size:20px;text-align:left;color:slategray;"},"submain":{"text":"Close circles have similar pairings, large circles are \n                          common elements, thick lines are common pairings","style":"font-family:Georgia, Times New Roman, Times, serif;\n                          font-size:13px;text-align:left;color:slategray"},"footer":null,"background":"rgba(0, 0, 0, 0)","tooltipStay":300,"tooltipStyle":"position: fixed;visibility:hidden;padding: 5px;white-space: nowrap;font-family: verdana;font-size:14px;font-color:#000000;background-color: #f5f4ed;-moz-border-radius: 3px;-webkit-border-radius: 3px;border-radius: 3px;border: 1px solid #808074;box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.2);"},"evals":[],"jsHooks":[]}</script><!--/html_preserve-->
 
 
 ## Creating a still network
 
-I also created a still network using ggraph package, but the image didn't render nicely using windows.
+I also created a still network using ggraph package, but the image didn't render nicely using windows, just improved a little using the Cairo package.
+
+First I do some of the steps as above to create a selection of nodes and edges of the top 10 connections.
 
 
 ```r
@@ -259,21 +266,31 @@ edges <- edges %>%
   top_n(10, value) 
 
 
-nodes_chose <- nodes %>% 
+nodes_chosen <- nodes %>% 
   dplyr::filter(id %in% c(edges$from, edges$to))
 
-nodes_chose$size <- bob_ross %>% 
+nodes_chosen$size <- bob_ross %>% 
   count(element) %>% 
-  inner_join(nodes_chose, by = c("element" = "label")) %>% 
+  inner_join(nodes_chosen, by = c("element" = "label")) %>% 
   .$n/10
+```
 
-br_igraph <- graph_from_data_frame(d = edges[,1:3], vertices = nodes_chose[,1:2], directed = TRUE)
+Then I create an igraph element to map the nodes and edges.
+
+
+```r
+br_igraph <- graph_from_data_frame(d = edges[,1:3], vertices = nodes_chosen[,1:2], directed = TRUE)
 
 br_tidy <- as_tbl_graph(br_igraph)
+```
 
-windowsFonts("Arial Narrow" = windowsFont("Arial"))
+Then I create the gggraph network.
 
-p <- ggraph(br_tidy, layout = "linear") + 
+
+```r
+windowsFonts("Arial Narrow" = windowsFont("Arial")) #Making it recognize windows fonts
+
+ggraph(br_tidy, layout = "linear") + 
   geom_edge_arc(aes(width = value), alpha = 0.8) + 
   scale_edge_width(range = c(0.2, 3)) +
   geom_node_text(aes(label = label), size = 5) +
@@ -283,11 +300,4 @@ p <- ggraph(br_tidy, layout = "linear") +
   theme_void()
 ```
 
-
-
-```r
-p
-```
-
-![](2019_08_06_painting_by_numbers_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
-
+![](/docs/assets/images/pbn_ggraph_network-1.png)<!-- -->

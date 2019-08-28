@@ -16,7 +16,8 @@ knitr::opts_chunk$set(
 
 # Data description
 
-From TidyTuesdays github:
+From [TidyTuesdays github](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-08-06):
+
 >Each of the columns after episode/title correspond to the binary presence (0 or 1) of that element in the painting.
 
 # Import data and packages
@@ -202,7 +203,7 @@ I haven't found a way to make annotations, so I tried to give the minimum releva
 
 ```{r pbn_visNetwork, message=FALSE, warning=FALSE, dpi = 130, fig.align="center"}
 #create visualization
-#Html content. Not run in the md.
+#Html content. Html content. Do not look in the md.
 visNetwork(nodes_chosen, edges,
            main = list( text = "What elements does Bob Ross paint together?",
                         style = 'font-family:Georgia, Times New Roman, Times, serif;
