@@ -3,6 +3,7 @@ title: "Tidy Tuesday 06/08/2019"
 output:
   html_document: 
     keep_md: true
+    df_print: kable
 always_allow_html: yes
 ---
 
@@ -15,30 +16,29 @@ knitr::opts_chunk$set(
 
 # Data description
 
-Each of the columns after episode/title correspond to the binary presence (0 or 1) of that element in the painting.
+From TidyTuesdays github:
+>Each of the columns after episode/title correspond to the binary presence (0 or 1) of that element in the painting.
 
 # Import data and packages
 
 ```{r message=FALSE, warning=FALSE}
+library(tidyverse) #data manipulation and ggplot
+library(visNetwork) #interactive network
+library(igraph) #still newtork
+library(tidygraph) #still newtork
+library(ggraph) #still newtork
+library(Cairo) #render the still newtork
+
 #bob_ross <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-08-06/bob-ross.csv")
 #write_csv(bob_ross, "boss_ross.csv")
 bob_ross <- readr::read_csv("boss_ross.csv")
-
-
-library(tidyverse)
-library(visNetwork)
-library(igraph)
-library(tidygraph)
-library(ggraph)
-library(Cairo)
 ```
 
 # Data 
 
-```{r}
-#recommended step to clean episode information and frame elements
-#I'll only work with the paintings
+Using the recommended steps to break apart the seasons and episodes. Also removing the frame elements.
 
+```{r}
 bob_ross <- bob_ross %>% 
   janitor::clean_names() %>% 
   separate(episode, into = c("season", "episode"), sep = "E") %>% 
@@ -66,9 +66,9 @@ bob_ross <- bob_ross %>%
 
 # EDA
 
-Now a little exploratory analysis.
+Now a little peek into the data.
 
-```{r}
+```{r pnb_eda_1}
 bob_ross %>% 
   count(element) %>% 
   top_n(10, n) %>% 
@@ -96,14 +96,14 @@ bob_ross %>%
 
 ```
 
-So trees is not very informative, since it only says if more than one tree is in the picture and not a really new element. Let's take away this element and refer to tree as "at least one tree". And let's do the same for mountains.
+Trees is not very informative, since it only says if more than one tree is in the picture and not a really new element. I'll take away this element and refer to tree as "at least one tree". And let's do the same for mountains.
 
 ```{r}
 bob_ross <- bob_ross %>% 
   filter(element != "trees", element != "mountains")
 ```
 
-
+For this data I chose to represent the most common association of elements, so I'll use a network graph.
 
 # Network graph
 
@@ -143,7 +143,7 @@ edges_i <- bob_ross %>%
   select(-c(presence,count_el))
 
 #Creates a table of top 100 connections and their sizes
-edges_l <- edges_i %>% 
+edges <- edges_i %>% 
   inner_join(edges_i, by = c("season", "episode")) %>% 
   dplyr::filter(element.x != element.y) %>% 
   group_by(grp = paste(pmax(element.x, element.y), pmin(element.x, element.y), sep = "_"), season, episode) %>%
@@ -156,7 +156,7 @@ edges_l <- edges_i %>%
   top_n(100, value)
 
 #Label the connections correctly
-edges <- edges_l %>% 
+edges <- edges %>% 
   left_join(nodes, by = c("element.x" = "label")) %>% 
   rename(from = id) %>% 
   left_join(nodes, by = c("element.y" = "label")) %>% 
@@ -168,22 +168,23 @@ Then we'll look into the nodes again to only select the nodes that appear in the
 
 ```{r}
 #Get only the nodes that are in the top 100 connections
-nodes_chose <- nodes %>% 
+nodes_chosen <- nodes %>% 
   dplyr::filter(id %in% c(edges$from, edges$to))
 
 #Variable for size of the nodes
-nodes_chose$size <- bob_ross %>% 
+nodes_chosen$size <- bob_ross %>% 
   dplyr::filter(presence == 1) %>% 
   count(element) %>% 
-  inner_join(nodes_chose, by = c("element" = "label")) %>% 
+  inner_join(nodes_chosen, by = c("element" = "label")) %>% 
   .$n/10
 ```
 
 
 ## Create the interactive network
 
-With visNetwork package it's easy to create a network element. But we have to try it some times to choose a good seed and solver algorithm and parameters.
-I didn't discover how to make annotations, so I tried to give the minimum relevant information in title and subtitle. And fade them a little so they don't take attention away from the data.
+With visNetwork package it's easy to create a network element. But I had to try it some times to choose a good seed and solver algorithm and parameters. I did also some modifications of some css elements to make the plot look better, they don't change the plot made in the .Rmd or in R but they are displayed in the html document.
+
+I haven't found a way to make annotations, so I tried to give the minimum relevant information in the title and subtitle. And fade them a little so they don't take attention away from the data.
 
 ```{css echo=FALSE, warning=FALSE}
 /*A little CSS to make the plot look better*/
@@ -199,15 +200,16 @@ I didn't discover how to make annotations, so I tried to give the minimum releva
 
 ```
 
-```{r message=FALSE, warning=FALSE, dpi = 130, fig.align="center"}
+```{r pbn_visNetwork, message=FALSE, warning=FALSE, dpi = 130, fig.align="center"}
 #create visualization
 #Html content. Not run in the md.
-visNetwork(nodes_chose, edges,
+visNetwork(nodes_chosen, edges,
            main = list( text = "What elements does Bob Ross paint together?",
                         style = 'font-family:Georgia, Times New Roman, Times, serif;
                         font-weight:bold;font-size:20px;text-align:left;color:slategray;'
                         ),
-           submain = list(text = 'Close circles have similar pairings, large circles are common elements, thick lines are common pairings' ,
+           submain = list(text = 'Close circles have similar pairings, large circles are 
+                          common elements, thick lines are common pairings' ,
                           style ='font-family:Georgia, Times New Roman, Times, serif;
                           font-size:13px;text-align:left;color:slategray'
                           )
@@ -229,28 +231,38 @@ visNetwork(nodes_chose, edges,
 
 ## Creating a still network
 
-I also created a still network using ggraph package, but the image didn't render nicely using windows.
+I also created a still network using ggraph package, but the image didn't render nicely using windows, just improved a little using the Cairo package.
 
-```{r echo=TRUE}
+First I do some of the steps as above to create a selection of nodes and edges of the top 10 connections.
+
+```{r}
 edges <- edges %>% 
   top_n(10, value) 
 
 
-nodes_chose <- nodes %>% 
+nodes_chosen <- nodes %>% 
   dplyr::filter(id %in% c(edges$from, edges$to))
 
-nodes_chose$size <- bob_ross %>% 
+nodes_chosen$size <- bob_ross %>% 
   count(element) %>% 
-  inner_join(nodes_chose, by = c("element" = "label")) %>% 
+  inner_join(nodes_chosen, by = c("element" = "label")) %>% 
   .$n/10
+```
 
-br_igraph <- graph_from_data_frame(d = edges[,1:3], vertices = nodes_chose[,1:2], directed = TRUE)
+Then I create an igraph element to map the nodes and edges.
+
+```{r echo=TRUE}
+br_igraph <- graph_from_data_frame(d = edges[,1:3], vertices = nodes_chosen[,1:2], directed = TRUE)
 
 br_tidy <- as_tbl_graph(br_igraph)
+```
 
-windowsFonts("Arial Narrow" = windowsFont("Arial"))
+Then I create the gggraph network.
 
-p <- ggraph(br_tidy, layout = "linear") + 
+```{r pbn_ggraph_network, fig.env='CairoPNG', fig.width=12, dpi=120}
+windowsFonts("Arial Narrow" = windowsFont("Arial")) #Making it recognize windows fonts
+
+ggraph(br_tidy, layout = "linear") + 
   geom_edge_arc(aes(width = value), alpha = 0.8) + 
   scale_edge_width(range = c(0.2, 3)) +
   geom_node_text(aes(label = label), size = 5) +
@@ -258,10 +270,5 @@ p <- ggraph(br_tidy, layout = "linear") +
        subtitle = "He sure loves vegetation",
     edge_width = "Nº of ocurrences") +
   theme_void()
-```
-
-
-```{r fig.env='CairoPNG', fig.width=12, dpi=120}
-p
 ```
 
