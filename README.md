@@ -1,4 +1,5 @@
-# TidyTuesdayJorge
-My Tidy Tuesday charts and code in markdown format.
+# Assorted Visualizations
 
-Each folder has an md output with the plots and code for making them. In case there's some interactive plot, an html output will also be provided.
+Some various visualizations I made for some challenges or personal projects. Expect a lot of R.
+
+And yes, the name was not my best moment, may change it later.
