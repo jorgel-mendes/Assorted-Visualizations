@@ -2,7 +2,7 @@
 title: "Tidy Tuesday 06/08/2019 Painting by Numbers"
 excerpt_separator: "<!--more-->"
 categories:
-  - Blog
+  - Tidy Tuesday
 tags:
   - Tidy Tuesday
   - Network Graphs
@@ -33,17 +33,17 @@ library(Cairo) #render the still newtork
 bob_ross <- readr::read_csv("boss_ross.csv")
 ```
 
-# Data 
+# Data
 
 Using the recommended steps to break apart the seasons and episodes. Also removing the frame elements.
 
 
 ```r
-bob_ross <- bob_ross %>% 
-  janitor::clean_names() %>% 
-  separate(episode, into = c("season", "episode"), sep = "E") %>% 
-  mutate(season = str_extract(season, "[:digit:]+")) %>% 
-  mutate_at(vars(season, episode), as.integer) %>% 
+bob_ross <- bob_ross %>%
+  janitor::clean_names() %>%
+  separate(episode, into = c("season", "episode"), sep = "E") %>%
+  mutate(season = str_extract(season, "[:digit:]+")) %>%
+  mutate_at(vars(season, episode), as.integer) %>%
   select(-c(contains("frame"), title))
 
 dim(bob_ross)
@@ -57,7 +57,7 @@ Very wide dataframe. Let's change it to a long, tidy format.
 
 
 ```r
-bob_ross <- bob_ross %>% 
+bob_ross <- bob_ross %>%
   gather("element", "presence", -c(season, episode))
 ```
 
@@ -65,7 +65,7 @@ This get us a lot of lines with zeroes, let's dispose of them.
 
 
 ```r
-bob_ross <- bob_ross %>% 
+bob_ross <- bob_ross %>%
   filter(presence >0)
 ```
 
@@ -76,10 +76,10 @@ Now a little peek into the data.
 
 
 ```r
-bob_ross %>% 
-  count(element) %>% 
-  top_n(10, n) %>% 
-  ggplot(aes(x = reorder(factor(element), n), 
+bob_ross %>%
+  count(element) %>%
+  top_n(10, n) %>%
+  ggplot(aes(x = reorder(factor(element), n),
              y = n)) +
     geom_col() +
     labs(x = "element", y ="count") +
@@ -93,15 +93,15 @@ So tree, and trees, are the most common elements. The top 10 elements in general
 Let's take a closer look to tree and trees.
 
 ```r
-bob_ross %>% 
-  group_by(season, episode) %>% 
+bob_ross %>%
+  group_by(season, episode) %>%
   summarise(
     only_tree = ifelse(any(element == "tree") & !(any(element == "trees")), 1, 0),
     only_trees = ifelse(!any(element == "tree") & (any(element == "trees")), 1, 0),
     both_tree_trees = ifelse(any(element == "tree") & (any(element == "trees")), 1, 0)
-  ) %>% 
-  ungroup() %>% 
-  select(-c(season, episode)) %>% 
+  ) %>%
+  ungroup() %>%
+  select(-c(season, episode)) %>%
   summarise_all(sum)
 ```
 
@@ -117,7 +117,7 @@ Trees is not very informative, since it only says if more than one tree is in th
 
 
 ```r
-bob_ross <- bob_ross %>% 
+bob_ross <- bob_ross %>%
   filter(element != "trees", element != "mountains")
 ```
 
@@ -131,13 +131,13 @@ First we create a data frame of nodes, with individual ids for each element name
 
 
 ```r
-nodes <- bob_ross %>% 
-  group_by(season, episode) %>% 
-  mutate(count_el = sum(presence)) %>% 
+nodes <- bob_ross %>%
+  group_by(season, episode) %>%
+  mutate(count_el = sum(presence)) %>%
   dplyr::filter(count_el > 1) %>%
-  ungroup() %>% 
-  select(label = element) %>% 
-  distinct() %>% 
+  ungroup() %>%
+  select(label = element) %>%
+  distinct() %>%
   rowid_to_column("id")
 ```
 
@@ -148,39 +148,39 @@ It involves:
 
 - Creating a table with the element counts;
 - Join it with itself to create the connections;
-- Eliminate the elements' connections to themselves created by the join. 
+- Eliminate the elements' connections to themselves created by the join.
 - Eliminate the mirrored connections. Since join repeats rows that are only a partial match, all combinations are considered and we end up with every connection twice.
 - Label the connections with the correct ids.
 
 
 ```r
 #Creates a variable of element counts
-edges_i <- bob_ross %>% 
-  group_by(season, episode) %>% 
+edges_i <- bob_ross %>%
+  group_by(season, episode) %>%
   mutate(count_el = sum(presence)) %>%
-  dplyr::filter(count_el > 1) %>% #just to make sure there isn't any element without a connection 
-  ungroup() %>% 
+  dplyr::filter(count_el > 1) %>% #just to make sure there isn't any element without a connection
+  ungroup() %>%
   select(-c(presence,count_el))
 
 #Creates a table of top 100 connections and their sizes
-edges <- edges_i %>% 
-  inner_join(edges_i, by = c("season", "episode")) %>% 
-  dplyr::filter(element.x != element.y) %>% 
+edges <- edges_i %>%
+  inner_join(edges_i, by = c("season", "episode")) %>%
+  dplyr::filter(element.x != element.y) %>%
   group_by(grp = paste(pmax(element.x, element.y), pmin(element.x, element.y), sep = "_"), season, episode) %>%
   slice(1) %>%
-  ungroup() %>% 
+  ungroup() %>%
   select(-c(grp, season, episode)) %>%
-  group_by(element.x, element.y) %>% 
-  summarise(value = n()) %>% 
-  ungroup() %>% 
+  group_by(element.x, element.y) %>%
+  summarise(value = n()) %>%
+  ungroup() %>%
   top_n(100, value)
 
 #Label the connections correctly
-edges <- edges %>% 
-  left_join(nodes, by = c("element.x" = "label")) %>% 
-  rename(from = id) %>% 
-  left_join(nodes, by = c("element.y" = "label")) %>% 
-  rename(to = id) %>% 
+edges <- edges %>%
+  left_join(nodes, by = c("element.x" = "label")) %>%
+  rename(from = id) %>%
+  left_join(nodes, by = c("element.y" = "label")) %>%
+  rename(to = id) %>%
   select(from, to, value)
 ```
 
@@ -189,14 +189,14 @@ Then we'll look into the nodes again to only select the nodes that appear in the
 
 ```r
 #Get only the nodes that are in the top 100 connections
-nodes_chosen <- nodes %>% 
+nodes_chosen <- nodes %>%
   dplyr::filter(id %in% c(edges$from, edges$to))
 
 #Variable for size of the nodes
-nodes_chosen$size <- bob_ross %>% 
-  dplyr::filter(presence == 1) %>% 
-  count(element) %>% 
-  inner_join(nodes_chosen, by = c("element" = "label")) %>% 
+nodes_chosen$size <- bob_ross %>%
+  dplyr::filter(presence == 1) %>%
+  count(element) %>%
+  inner_join(nodes_chosen, by = c("element" = "label")) %>%
   .$n/10
 ```
 
@@ -209,8 +209,8 @@ I haven't found a way to make annotations, so I tried to give the minimum releva
 
 <style type="text/css">
 /*A little CSS to make the plot look better*/
-  
-  
+
+
 .vis-navigation {
   opacity: 0.35;
 }
@@ -230,7 +230,7 @@ visNetwork(nodes_chosen, edges,
                         style = 'font-family:Georgia, Times New Roman, Times, serif;
                         font-weight:bold;font-size:20px;text-align:left;color:slategray;'
                         ),
-           submain = list(text = 'Close circles have similar pairings, large circles are 
+           submain = list(text = 'Close circles have similar pairings, large circles are
                           common elements, thick lines are common pairings' ,
                           style ='font-family:Georgia, Times New Roman, Times, serif;
                           font-size:13px;text-align:left;color:slategray'
@@ -262,16 +262,16 @@ First I do some of the steps as above to create a selection of nodes and edges o
 
 
 ```r
-edges <- edges %>% 
-  top_n(10, value) 
+edges <- edges %>%
+  top_n(10, value)
 
 
-nodes_chosen <- nodes %>% 
+nodes_chosen <- nodes %>%
   dplyr::filter(id %in% c(edges$from, edges$to))
 
-nodes_chosen$size <- bob_ross %>% 
-  count(element) %>% 
-  inner_join(nodes_chosen, by = c("element" = "label")) %>% 
+nodes_chosen$size <- bob_ross %>%
+  count(element) %>%
+  inner_join(nodes_chosen, by = c("element" = "label")) %>%
   .$n/10
 ```
 
@@ -290,8 +290,8 @@ Then I create the gggraph network.
 ```r
 windowsFonts("Arial Narrow" = windowsFont("Arial")) #Making it recognize windows fonts
 
-ggraph(br_tidy, layout = "linear") + 
-  geom_edge_arc(aes(width = value), alpha = 0.8) + 
+ggraph(br_tidy, layout = "linear") +
+  geom_edge_arc(aes(width = value), alpha = 0.8) +
   scale_edge_width(range = c(0.2, 3)) +
   geom_node_text(aes(label = label), size = 5) +
   labs(title = "Bob Ross' top 10 pairings in paintings",

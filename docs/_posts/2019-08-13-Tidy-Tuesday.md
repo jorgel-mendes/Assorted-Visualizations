@@ -2,7 +2,7 @@
 title: "Tidy Tuesday 13/08/2019 Roman Emperors"
 excerpt_separator: "<!--more-->"
 categories:
-  - Blog
+  - Tidy Tuesday
 tags:
   - Tidy Tuesday
   - Treemaps
@@ -58,7 +58,7 @@ Most of the data is date or categorical. I’m curious about how many
 different death causes and killers we have.
 
 ``` r
-emperors_ck <- emperors %>% 
+emperors_ck <- emperors %>%
   transmute(cause = factor(cause),
          killer = factor(killer))
 
@@ -80,10 +80,10 @@ create a treemap to display this information.
 Creating a data frame with the relevant information for the treemap.
 
 ``` r
-emperors_ck <- emperors_ck %>% 
+emperors_ck <- emperors_ck %>%
   transmute(parent = cause,
-            id = killer) %>% 
-  group_by(parent, id) %>% 
+            id = killer) %>%
+  group_by(parent, id) %>%
   summarise(value = n())
 ```
 
@@ -93,7 +93,7 @@ Creating the treemap with treemapify package.
 ggplot(emperors_ck, aes(area = value, fill = parent,
                         label = id, subgroup = parent))+
   geom_treemap() +
-  geom_treemap_text(place = 'topleft', min.size = 8, 
+  geom_treemap_text(place = 'topleft', min.size = 8,
                     reflow = T) +
   geom_treemap_subgroup_text(
     alpha = 0.5, place = 'bottomleft'
