@@ -106,4 +106,4 @@ ggplot(emperors_ck, aes(area = value, fill = parent,
   labs(title = 'Cause of death of Roman Emperors (26BC-395AC)')
 ```
 
-![](/assets/images/rem_treemap-1.png)<!-- -->
+![](docs/assets/images/rem_treemap-1.png)<!-- -->
