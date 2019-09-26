@@ -1,0 +1,88 @@
+---
+title: "Tidy Tuesday 20/08/2019"
+output:
+  github_document: 
+    df_print: kable
+always_allow_html: yes
+---
+
+```{r opts, echo = FALSE}
+figs_path <- paste0(here::here("docs", "assets", "images"),"/")
+knitr::opts_chunk$set(
+  fig.path = figs_path
+)
+```
+
+# Data description
+
+From From [TidyTuesdays github](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-08-13):
+
+> This week's data is from Stockholm International Peace Research Institute, by way of data is plural with credit to Jesus Castagnetto for sharing the dataset.
+
+> Additional information can be found on Wikipedia or via the original report PDF.
+
+> Additional related datasets can be found at Our World in Data.
+
+> For details around units for yield/magnitude, please see the Nuclear Yield formulas.
+
+# Import data and packages
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+
+# nuclear_explosions <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-08-20/nuclear_explosions.csv")
+#write_csv(nuclear_explosions, "nuclear_explosions.csv")
+
+nuclear_explosions <- readr::read_csv("nuclear_explosions.csv")
+```
+
+# Data 
+
+I'm inclined to do a radar chart for the 
+
+```{r}
+#View(emperors)
+str(emperors, give.attr = FALSE)
+```
+
+Most of the data is date or categorical. I'm curious about how many different death causes and killers we have.
+
+```{r}
+emperors_ck <- emperors %>% 
+  transmute(cause = factor(cause),
+         killer = factor(killer))
+
+summary(emperors_ck)
+```
+
+So we have just 7 death causes and some varied killer motives, so I can create a treemap to display this information.
+
+Creating a data frame with the relevant information for the treemap.
+
+```{r}
+emperors_ck <- emperors_ck %>% 
+  transmute(parent = cause,
+            id = killer) %>% 
+  group_by(parent, id) %>% 
+  summarise(value = n())
+```
+
+Creating the treemap with treemapify package.
+
+```{r rem_treemap}
+ggplot(emperors_ck, aes(area = value, fill = parent,
+                        label = id, subgroup = parent))+
+  geom_treemap() +
+  geom_treemap_text(place = 'topleft', min.size = 8, 
+                    reflow = T) +
+  geom_treemap_subgroup_text(
+    alpha = 0.5, place = 'bottomleft'
+  ) +
+  scale_fill_brewer(palette = 'Dark2') +
+  theme(
+    legend.position = 'none',
+    title = element_text(colour = 'darkslategrey')
+  ) +
+  labs(title = 'Cause of death of Roman Emperors (26BC-395AC)')
+```
+
