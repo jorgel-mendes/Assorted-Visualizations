@@ -86,7 +86,7 @@ bob_ross %>%
   coord_flip()
 ```
 
-![](/docs/assets/images/pnb_eda_1-1.png)<!-- -->
+![](https://raw.githubusercontent.com/jorgel-mendes/Behold-the-Vision/master/docs/assets/images/pnb_eda_1-1.png)<!-- -->
 
 So tree, and trees, are the most common elements. The top 10 elements in general are related with nature, landscapes and backgrounds.
 
