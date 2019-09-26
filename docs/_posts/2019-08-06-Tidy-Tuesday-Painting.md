@@ -300,4 +300,4 @@ ggraph(br_tidy, layout = "linear") +
   theme_void()
 ```
 
-![](/docs/assets/images/pbn_ggraph_network-1.png)<!-- -->
+![](https://raw.githubusercontent.com/jorgel-mendes/Behold-the-Vision/master/docs/assets/images/pbn_ggraph_network-1.png)<!-- -->
