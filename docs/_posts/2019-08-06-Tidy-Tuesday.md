@@ -2,7 +2,7 @@
 title: "Tidy Tuesday 06/08/2019 Painting by Numbers"
 excerpt_separator: "<!--more-->"
 categories:
-  - Tidy Tuesday
+  - Tidy-Tuesday
 tags:
   - Tidy Tuesday
   - Network Graphs
