@@ -40,14 +40,65 @@ ggplot(Wage, aes(education, wage, fill = education)) +
 #Figure 1.2 Stock market data
 data("Smarket")
 
-Up_Down <- function(x) ifelse(x>0, "Up", "Down")
+facet_titles <- c("Lag1" = "Yesterday", 
+                     "Lag2" = "Two Days Previous",
+                     "Lag3" = "Three Days Previous")
 
 Smarket %>% 
-  transmute(Dif1 = Up_Down(Today - Lag1),
-            Dif2 = Up_Down(Today - Lag2),
-            Dif3 = Up_Down(Today - Lag3)) %>% 
-  pivot_wide
+  select(Lag1, Lag2, Lag3, Direction) %>% 
+  pivot_longer(cols = starts_with("Lag"), names_to = "Lag", values_to = "Percentage") %>% 
+  ggplot(aes(Direction, Percentage, fill = Direction)) +
+  geom_boxplot(outlier.shape = 21, outlier.fill = 'white') +
+  facet_wrap(~Lag,
+             labeller = as_labeller(facet_titles),
+             scales = 'free') +
+  scale_fill_manual(values = c('deepskyblue3', 'darkorange2'), guide = FALSE) +
+  ylab("Percentage change in S&P") +
+  xlab("Today's direction") +
+  islr_theme +
+  theme(
+    strip.background = element_blank(),
+    strip.text.x = element_text(
+      size = 10, face = "bold"
+    )
+  )
 
 
-  ggplot(aes(Today, Lag1)) +
-  geom_boxplot()
+#Figure 1.3 qda Smarket
+
+model_qda <- Smarket %>% 
+  filter(Year < 2005) %>% 
+  MASS::qda(Direction~Lag1+Lag2, data = .)
+###page163/173from pdf
+
+Smarket %>% 
+  filter(Year == 2005) %>% 
+  predict(model_qda, newdata = .) %>% 
+  .[[2]] %>%  
+  as_tibble() %>% 
+  transmute(Direction = Smarket$Direction[Smarket$Year == 2005],
+         Probability = ifelse(Direction == 'Down', Down, Up)) %>%
+  ggplot(aes(Direction, Probability, fill = Direction)) +
+  geom_boxplot() +
+  scale_fill_manual(values = c('deepskyblue3', 'darkorange2'), guide = FALSE) +
+  xlab("Today's Direction") +
+  ylab('Predicted Probability') +
+  islr_theme
+###Not exactly the same as the one in the book
+###but I couldn't get it exactly right.
+
+
+# Figure 1.4 NCI60 data
+
+data("NCI60")
+
+prcomp(NCI60$data, scale = TRUE)$x[,1:2] %>% 
+  as_tibble() %>% 
+  mutate(Cancer_type = NCI60$labs) %>% 
+  ggplot(aes(PC1,PC2, 
+             color = Cancer_type)) +
+  geom_point() +
+  guides(color = FALSE) +
+  xlab(expression(Z[1])) +
+  ylab(expression(Z[2])) +
+  islr_theme
