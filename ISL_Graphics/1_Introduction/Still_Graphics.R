@@ -92,13 +92,36 @@ Smarket %>%
 
 data("NCI60")
 
+##4 groups
+prcomp(NCI60$data, scale = TRUE)$x[,1:2] %>% 
+  as_tibble() %>% 
+  mutate(Groups = case_when(
+    PC1 < -30 & PC2 < 0 ~ '1',
+    between(PC1,-40,50) & PC2 > -5 ~ '2',
+    PC1 > 20 & between(PC2, -25, 10) ~ '3',
+    PC2 < -25 ~ '4'
+  )) %>% 
+  ggplot(aes(PC1,PC2, 
+             color = Groups)) +
+  geom_point() +
+  scale_color_manual(values = c('red', 'navyblue', 'springgreen4', 'royalblue'),
+                     guide = FALSE) +
+  xlab(expression(Z[1])) +
+  ylab(expression(Z[2])) +
+  islr_theme
+
+
+##by cancer type
 prcomp(NCI60$data, scale = TRUE)$x[,1:2] %>% 
   as_tibble() %>% 
   mutate(Cancer_type = NCI60$labs) %>% 
   ggplot(aes(PC1,PC2, 
-             color = Cancer_type)) +
+             color = Cancer_type,
+             shape = Cancer_type)) +
   geom_point() +
-  guides(color = FALSE) +
+  scale_shape_manual(values = 1:length(unique(NCI60$labs))) +
+  guides(color = FALSE,
+         shape = FALSE) +
   xlab(expression(Z[1])) +
   ylab(expression(Z[2])) +
   islr_theme

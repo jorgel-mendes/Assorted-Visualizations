@@ -29,6 +29,9 @@ From From [TidyTuesdays github](https://github.com/rfordatascience/tidytuesday/t
 
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
+library(ggradar)
+library(gganimate)
+library(scales)
 
 # nuclear_explosions <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-08-20/nuclear_explosions.csv")
 #write_csv(nuclear_explosions, "nuclear_explosions.csv")
@@ -38,51 +41,45 @@ nuclear_explosions <- readr::read_csv("nuclear_explosions.csv")
 
 # Data 
 
-I'm inclined to do a radar chart for the 
+I'm inclined to do a radar chart, a jojo chart, to show the power of the explosions.
 
 ```{r}
-#View(emperors)
-str(emperors, give.attr = FALSE)
+unique(nuclear_explosions$country)
 ```
 
-Most of the data is date or categorical. I'm curious about how many different death causes and killers we have.
+Let's make the chart for the USA for the biggest average yield in each year.
 
 ```{r}
-emperors_ck <- emperors %>% 
-  transmute(cause = factor(cause),
-         killer = factor(killer))
+nuclear_explosions %>% 
+  select(country, year, magnitude_body, magnitude_surface,
+         yield_lower, yield_upper) %>% 
+  group_by(country, year) %>% 
+  filter_all(all_vars(. > 0)) %>% 
+  slice(which.max(yield_upper)) %>% 
+  ungroup() %>% 
+  mutate(count_year = table(year)[as.character(year)]) %>% 
+  rename(group = country,
+         `yield up` = yield_upper,
+         yield_low = yield_lower,
+         mangnitude_surf = magnitude_surface) %>% 
+  filter(count_year == max(count_year)) %>% 
+  select(-c(year, count_year)) %>% 
+  mutate_at(vars(-group), rescale) %>% 
+  ggradar(
+    base.size = 8,
+    gridline.min.colour = 'slategrey',
+    gridline.mid.colour = 'slategrey',
+    gridline.max.colour = 'slategrey',
+    grid.label.size = 3,
+    axis.label.size = 4,
+    axis.line.colour = 'lightslategrey',
+    group.line.width = 1.2,
+    group.point.size = 4,
+    background.circle.colour = 'gainsboro',
+    legend.text.size = 9,
+    legend.position = 'top'
+  )
 
-summary(emperors_ck)
-```
 
-So we have just 7 death causes and some varied killer motives, so I can create a treemap to display this information.
-
-Creating a data frame with the relevant information for the treemap.
-
-```{r}
-emperors_ck <- emperors_ck %>% 
-  transmute(parent = cause,
-            id = killer) %>% 
-  group_by(parent, id) %>% 
-  summarise(value = n())
-```
-
-Creating the treemap with treemapify package.
-
-```{r rem_treemap}
-ggplot(emperors_ck, aes(area = value, fill = parent,
-                        label = id, subgroup = parent))+
-  geom_treemap() +
-  geom_treemap_text(place = 'topleft', min.size = 8, 
-                    reflow = T) +
-  geom_treemap_subgroup_text(
-    alpha = 0.5, place = 'bottomleft'
-  ) +
-  scale_fill_brewer(palette = 'Dark2') +
-  theme(
-    legend.position = 'none',
-    title = element_text(colour = 'darkslategrey')
-  ) +
-  labs(title = 'Cause of death of Roman Emperors (26BC-395AC)')
 ```
 
