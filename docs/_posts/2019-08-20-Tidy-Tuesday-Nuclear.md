@@ -1,33 +1,35 @@
 ---
-title: "Tidy Tuesday 20/08/2019"
-output:
-  github_document: 
-    df_print: kable
-always_allow_html: yes
+title: "Tidy Tuesday 20/08/2019 Nuclear Explosions"
+excerpt_separator: "<!--more-->"
+categories:
+  - Tidy Tuesday
+tags:
+  - Tidy Tuesday
+  - Radar plots
+  - ggradar
+visNetwork: true
 ---
-
-```{r opts, echo = FALSE}
-figs_path <- paste0(here::here("docs", "assets", "images"),"/")
-knitr::opts_chunk$set(
-  fig.path = figs_path
-)
-```
 
 # Data description
 
-From From [TidyTuesdays github](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-08-13):
+From From [TidyTuesdays
+github](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-08-13):
 
-> This week's data is from Stockholm International Peace Research Institute, by way of data is plural with credit to Jesus Castagnetto for sharing the dataset.
+> This week’s data is from Stockholm International Peace Research
+> Institute, by way of data is plural with credit to Jesus Castagnetto
+> for sharing the dataset.
 
-> Additional information can be found on Wikipedia or via the original report PDF.
+> Additional information can be found on Wikipedia or via the original
+> report PDF.
 
 > Additional related datasets can be found at Our World in Data.
 
-> For details around units for yield/magnitude, please see the Nuclear Yield formulas.
+> For details around units for yield/magnitude, please see the Nuclear
+> Yield formulas.
 
 # Import data and packages
 
-```{r message=FALSE, warning=FALSE}
+``` r
 library(tidyverse)
 library(ggradar)
 library(gganimate)
@@ -39,27 +41,31 @@ library(scales)
 nuclear_explosions <- readr::read_csv("nuclear_explosions.csv")
 ```
 
-# Data 
+# Data
 
-I'm inclined to do a radar chart, a jojo chart, to show the power of the explosions.
+I’m inclined to do a radar chart, a jojo chart, to show the power of the
+explosions.
 
-```{r}
+``` r
 unique(nuclear_explosions$country)
 ```
 
-Let's make the chart for the USA for the biggest average yield in each year.
+    ## [1] "USA"    "USSR"   "UK"     "FRANCE" "CHINA"  "INDIA"  "PAKIST"
 
-```{r nex_radar}
+Let’s make the chart for the USA for the biggest average yield in each
+year.
+
+``` r
 nuclear_explosions %>% 
   select(country, year, magnitude_body, magnitude_surface,
          yield_lower, yield_upper) %>% 
   group_by(country, year) %>% 
-  filter_all(all_vars(. > 0)) %>% #drop rows with any zeroes
-  slice(which.max(yield_upper)) %>% #select max yield by country and year
+  filter_all(all_vars(. > 0)) %>% 
+  slice(which.max(yield_upper)) %>% 
   ungroup() %>% 
-  mutate(count_year = table(year)[as.character(year)]) %>% #count the year apperarences
+  mutate(count_year = table(year)[as.character(year)]) %>% 
   rename(group = country) %>% 
-  filter(count_year == max(count_year)) %>% #filter the year with most appearences
+  filter(count_year == max(count_year)) %>% 
   select(-c(year, count_year)) %>% 
   mutate_at(vars(-group), rescale) %>% 
   ggradar(
@@ -77,11 +83,10 @@ nuclear_explosions %>%
     group.line.width = 1.2,
     group.point.size = 4,
     background.circle.colour = 'gainsboro',
-    plot.title = '',
     legend.text.size = 9,
     legend.position = 'top'
   )
-
-
 ```
+
+![](https://raw.githubusercontent.com/jorgel-mendes/Behold-the-Vision/master/docs/assets/images/nex_radar-1.png)<!-- -->
 
