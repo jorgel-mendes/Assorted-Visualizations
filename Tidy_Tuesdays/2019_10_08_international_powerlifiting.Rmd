@@ -1,0 +1,78 @@
+---
+title: "Tidy Tuesday 08/10/2019"
+output:
+  github_document: 
+    df_print: kable
+always_allow_html: yes
+---
+
+```{r opts, echo = FALSE}
+figs_path <- paste0(here::here("docs", "assets", "images"),"/")
+knitr::opts_chunk$set(
+  fig.path = figs_path
+)
+```
+
+# Data description
+
+From From [TidyTuesdays github](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-10-08):
+
+>This week's data is from Open Powerlifting.   
+>Wikipedia has many details around the sport itself, as well as more details around the 3 lifts (squat, bench, and deadlift).    
+>Credit to Nichole Monhait for sharing this fantastic open dataset. Please note this is a small subset of the data limited to IPF (International Powerlifting Federation) events, the full dataset with many more columns and alternative events can be found as a .csv at https://openpowerlifting.org/data. The full dataset has many more federations, ages, and meet types but is >250 MB.    
+>A nice analysis of this dataset for age-effects in R can be found at Elias Oziolor's Blog
+
+# Import data and packages
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(lubridate)
+
+ipf_lifts <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-10-08/ipf_lifts.csv")
+
+write_csv(ipf_lifts, 'ipf_lifts.csv')
+
+df <- read_csv('ipf_lifts.csv')
+
+df_clean <- df %>% 
+  janitor::clean_names()
+
+df_clean %>% 
+  group_by(federation) %>% 
+  count(sort = TRUE)
+
+size_df <- df_clean %>% 
+  select(name:weight_class_kg, starts_with("best"), place, date, federation, meet_name)  %>% 
+  filter(!is.na(date)) %>% 
+  filter(federation == "IPF") %>% 
+  object.size()
+
+ipf_data <- df_clean %>% 
+  select(name:weight_class_kg, starts_with("best"), place, date, federation, meet_name)  %>% 
+  filter(!is.na(date)) %>% 
+  filter(federation == "IPF")
+
+print(size_df, units = "MB")
+
+ipf_data %>% 
+  write_csv("ipf_lifts.csv")
+```
+
+# Data 
+
+```{r}
+str(ipf_data)
+```
+
+I want to find if any equipment is preferred by a certain gender or age group.
+
+```{r}
+ipf_data %>% 
+  mutate(month = month(date),
+         year = year(date)) %>% 
+  group_by(year, month) %>% 
+  summarise()
+  ggplot(aes(date, age, fill = sex)) +
+  geom_boxplot()
+```
+

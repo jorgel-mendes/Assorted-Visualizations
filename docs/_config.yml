@@ -13,11 +13,10 @@
 # you will see them accessed via {{ site.title }}, {{ site.email }}, and so on.
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
-title: Assorted Visualizations
+title: Behold the Vision
 email: jorgel.mendes@hotmail.com
 description: >- # this means to ignore newlines until "baseurl:"
-  Compilation of data visualizations examples and tips. Focused in R
-  but with content in Excel and other programming languages.
+  Compilation of data visualizations examples and tips. Focused in R.
 twitter_username: jorgelsm
 github_username: jorgel-mendes
 minimal_mistakes_skin: dirt
