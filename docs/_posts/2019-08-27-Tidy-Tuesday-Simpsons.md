@@ -9,7 +9,7 @@ tags:
   - ggplot
 ---
 
-# Data description
+# # Data description
 
 From From [TidyTuesdays
 github](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-08-27):
@@ -48,27 +48,24 @@ simpsons %>%
   top_n(15)
 ```
 
-<div class="kable-table">
-
-| role                        |
-| :-------------------------- |
-| Worker                      |
-| Woody Boyd                  |
-| Wink                        |
-| Werewolf; Werewolf Flanders |
-| Zoo animals                 |
-| Warden                      |
-| Zelda                       |
-| Warden                      |
-| Wise Old Cat singer         |
-| Wayne Slater                |
-| Walter White (live action)  |
-| Zhenya                      |
-| Young Man                   |
-| William Masters             |
-| Whistler                    |
-
-</div>
+    ## # A tibble: 15 x 1
+    ##    role                       
+    ##    <chr>                      
+    ##  1 Worker                     
+    ##  2 Woody Boyd                 
+    ##  3 Wink                       
+    ##  4 Werewolf; Werewolf Flanders
+    ##  5 Zoo animals                
+    ##  6 Warden                     
+    ##  7 Zelda                      
+    ##  8 Warden                     
+    ##  9 Wise Old Cat singer        
+    ## 10 Wayne Slater               
+    ## 11 Walter White (live action) 
+    ## 12 Zhenya                     
+    ## 13 Young Man                  
+    ## 14 William Masters            
+    ## 15 Whistler
 
 Sometimes that’s more than one role for guest in one episode. Let’s
 split this.
