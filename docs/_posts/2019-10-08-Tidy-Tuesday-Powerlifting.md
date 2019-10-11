@@ -8,7 +8,6 @@ tags:
   - Smooth line
   - Dispersion plots
   - ggplot
-visNetwork: true
 ---
 
 # Data description

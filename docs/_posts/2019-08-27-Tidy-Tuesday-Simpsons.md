@@ -7,7 +7,6 @@ tags:
   - Tidy Tuesday
   - Frequency Polygons
   - ggplot
-visNetwork: true
 ---
 
 # Data description
