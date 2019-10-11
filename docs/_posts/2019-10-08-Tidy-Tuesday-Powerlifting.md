@@ -12,12 +12,20 @@ tags:
 
 # Data description
 
-From From [TidyTuesdays github](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-10-08):
+From From [TidyTuesdays
+github](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-10-08):
 
->This week's data is from Open Powerlifting.   
->Wikipedia has many details around the sport itself, as well as more details around the 3 lifts (squat, bench, and deadlift).    
->Credit to Nichole Monhait for sharing this fantastic open dataset. Please note this is a small subset of the data limited to IPF (International Powerlifting Federation) events, the full dataset with many more columns and alternative events can be found as a .csv at https://openpowerlifting.org/data. The full dataset has many more federations, ages, and meet types but is >250 MB.    
->A nice analysis of this dataset for age-effects in R can be found at Elias Oziolor's Blog
+> This week’s data is from Open Powerlifting.  
+> Wikipedia has many details around the sport itself, as well as more
+> details around the 3 lifts (squat, bench, and deadlift).  
+> Credit to Nichole Monhait for sharing this fantastic open dataset.
+> Please note this is a small subset of the data limited to IPF
+> (International Powerlifting Federation) events, the full dataset with
+> many more columns and alternative events can be found as a .csv at
+> <https://openpowerlifting.org/data>. The full dataset has many more
+> federations, ages, and meet types but is \>250 MB.  
+> A nice analysis of this dataset for age-effects in R can be found at
+> Elias Oziolor’s Blog
 
 # Import data and packages
 
@@ -40,13 +48,10 @@ df_clean %>%
   count(sort = TRUE)
 ```
 
-<div class="kable-table">
-
-| federation |     n |
-| :--------- | ----: |
-| IPF        | 41152 |
-
-</div>
+    ## # A tibble: 1 x 2
+    ##   federation     n
+    ##   <chr>      <int>
+    ## 1 IPF        41152
 
 ``` r
 size_df <- df_clean %>% 
@@ -113,7 +118,8 @@ str(ipf_data)
     ##   ..   meet_name = col_character()
     ##   .. )
 
-I want to find how performance for best lift changes with age for men and women.
+I want to find if any equipment is preferred by a certain gender or age
+group.
 
 ``` r
 facet_titles <- c(
