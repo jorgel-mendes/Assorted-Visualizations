@@ -32,7 +32,6 @@ github](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/201
 ``` r
 library(tidyverse)
 library(ggradar)
-library(gganimate)
 library(scales)
 
 # nuclear_explosions <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-08-20/nuclear_explosions.csv")

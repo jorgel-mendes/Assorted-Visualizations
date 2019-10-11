@@ -5,8 +5,9 @@ categories:
   - Tidy Tuesday
 tags:
   - Tidy Tuesday
-  - Radar plots
-  - ggradar
+  - Smooth line
+  - Dispersion plots
+  - ggplot
 visNetwork: true
 ---
 
@@ -113,8 +114,7 @@ str(ipf_data)
     ##   ..   meet_name = col_character()
     ##   .. )
 
-I want to find if any equipment is preferred by a certain gender or age
-group.
+I want to find how performance for best lift changes with age for men and women.
 
 ``` r
 facet_titles <- c(
@@ -154,4 +154,4 @@ ipf_data %>%
         )
 ```
 
-![]https://raw.githubusercontent.com/jorgel-mendes/Behold-the-Vision/master/docs/assets/images/inp_smooth-1.png)<!-- -->
+![](https://raw.githubusercontent.com/jorgel-mendes/Behold-the-Vision/master/docs/assets/images/inp_smooth-1.png)<!-- -->
