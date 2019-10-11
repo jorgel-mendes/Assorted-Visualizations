@@ -66,4 +66,5 @@ ggplot(Ex_1) +
         panel.border = element_blank(),
         title = element_text(colour = "darkslategrey", face = 'bold'))
 
-ggsave('Exercise1.png', type = 'cairo', scale = 1.5)
+path <- paste0(here::here("docs", "assets", "images"),"/", '2019_10_SWD.png')
+ggsave(path, type = 'cairo', scale = 1.5)

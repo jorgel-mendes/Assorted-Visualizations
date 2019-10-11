@@ -1,17 +1,14 @@
 ---
-title: "Tidy Tuesday 08/10/2019"
-output:
-  github_document: 
-    df_print: kable
-always_allow_html: yes
+title: "Tidy Tuesday 08/10/2019 International Powerlifiting"
+excerpt_separator: "<!--more-->"
+categories:
+  - Tidy Tuesday
+tags:
+  - Tidy Tuesday
+  - Radar plots
+  - ggradar
+visNetwork: true
 ---
-
-```{r opts, echo = FALSE}
-figs_path <- paste0(here::here("docs", "assets", "images"),"/")
-knitr::opts_chunk$set(
-  fig.path = figs_path
-)
-```
 
 # Data description
 
@@ -24,7 +21,7 @@ From From [TidyTuesdays github](https://github.com/rfordatascience/tidytuesday/t
 
 # Import data and packages
 
-```{r message=FALSE, warning=FALSE}
+``` r
 library(tidyverse)
 library(lubridate)
 library(Cairo)
@@ -41,7 +38,17 @@ df_clean <- df %>%
 df_clean %>% 
   group_by(federation) %>% 
   count(sort = TRUE)
+```
 
+<div class="kable-table">
+
+| federation |     n |
+| :--------- | ----: |
+| IPF        | 41152 |
+
+</div>
+
+``` r
 size_df <- df_clean %>% 
   select(name:weight_class_kg, starts_with("best"), place, date, federation, meet_name)  %>% 
   filter(!is.na(date)) %>% 
@@ -54,20 +61,62 @@ ipf_data <- df_clean %>%
   filter(federation == "IPF")
 
 print(size_df, units = "MB")
+```
 
+    ## 6.2 Mb
+
+``` r
 ipf_data %>% 
   write_csv("ipf_lifts.csv")
 ```
 
-# Data 
+# Data
 
-```{r}
+``` r
 str(ipf_data)
 ```
 
-I want to find if any equipment is preferred by a certain gender or age group.
+    ## Classes 'spec_tbl_df', 'tbl_df', 'tbl' and 'data.frame': 41152 obs. of  16 variables:
+    ##  $ name            : chr  "Hiroyuki Isagawa" "David Mannering" "Eddy Pengelly" "Nanda Talambanua" ...
+    ##  $ sex             : chr  "M" "M" "M" "M" ...
+    ##  $ event           : chr  "SBD" "SBD" "SBD" "SBD" ...
+    ##  $ equipment       : chr  "Single-ply" "Single-ply" "Single-ply" "Single-ply" ...
+    ##  $ age             : num  NA 24 35.5 19.5 NA NA 32.5 31.5 NA NA ...
+    ##  $ age_class       : chr  NA "24-34" "35-39" "20-23" ...
+    ##  $ division        : chr  NA NA NA NA ...
+    ##  $ bodyweight_kg   : num  67.5 67.5 67.5 67.5 67.5 67.5 67.5 90 90 90 ...
+    ##  $ weight_class_kg : chr  "67.5" "67.5" "67.5" "67.5" ...
+    ##  $ best3squat_kg   : num  205 225 245 195 240 ...
+    ##  $ best3bench_kg   : num  140 132 158 110 140 ...
+    ##  $ best3deadlift_kg: num  225 235 270 240 215 230 235 335 310 295 ...
+    ##  $ place           : chr  "1" "2" "3" "4" ...
+    ##  $ date            : Date, format: "1985-08-03" "1985-08-03" ...
+    ##  $ federation      : chr  "IPF" "IPF" "IPF" "IPF" ...
+    ##  $ meet_name       : chr  "World Games" "World Games" "World Games" "World Games" ...
+    ##  - attr(*, "spec")=
+    ##   .. cols(
+    ##   ..   name = col_character(),
+    ##   ..   sex = col_character(),
+    ##   ..   event = col_character(),
+    ##   ..   equipment = col_character(),
+    ##   ..   age = col_double(),
+    ##   ..   age_class = col_character(),
+    ##   ..   division = col_character(),
+    ##   ..   bodyweight_kg = col_double(),
+    ##   ..   weight_class_kg = col_character(),
+    ##   ..   best3squat_kg = col_double(),
+    ##   ..   best3bench_kg = col_double(),
+    ##   ..   best3deadlift_kg = col_double(),
+    ##   ..   place = col_character(),
+    ##   ..   date = col_date(format = ""),
+    ##   ..   federation = col_character(),
+    ##   ..   meet_name = col_character()
+    ##   .. )
 
-```{r inp_smooth, message=FALSE, warning=FALSE, dev='CairoPNG'}
+I want to find if any equipment is preferred by a certain gender or age
+group.
+
+``` r
 facet_titles <- c(
   'best3squat_kg' = 'Squat',
   'best3bench_kg' = 'Bench',
@@ -105,3 +154,4 @@ ipf_data %>%
         )
 ```
 
+![]https://raw.githubusercontent.com/jorgel-mendes/Behold-the-Vision/master/docs/assets/images/inp_smooth-1.png)<!-- -->
