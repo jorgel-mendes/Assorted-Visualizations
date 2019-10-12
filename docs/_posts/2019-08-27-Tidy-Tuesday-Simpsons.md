@@ -9,7 +9,7 @@ tags:
   - ggplot
 ---
 
-# # Data description
+# Data description
 
 From From [TidyTuesdays
 github](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-08-27):
@@ -91,7 +91,7 @@ simpsons %>%
   geom_freqpoly() + 
   labs(x = "Season",
        y = "Count",
-       title = "Which do guests play more each season of the Simpsons?",
+       title = "Which roles do guests play more each season of the Simpsons?",
        subtitle = "They usually play non-singing characters or themselves",
        color = "Type of Guest") + 
   scale_colour_brewer(palette = 'Dark2') +
