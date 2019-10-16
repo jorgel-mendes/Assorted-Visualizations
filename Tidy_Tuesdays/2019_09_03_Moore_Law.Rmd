@@ -38,7 +38,7 @@ ram <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytu
 
 ```
 
-Let's see area over time.
+Let's see number of transistors over time.
 
 ```{r mol_point, message=FALSE, warning=FALSE}
 

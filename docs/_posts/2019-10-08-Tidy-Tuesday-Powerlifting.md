@@ -34,25 +34,10 @@ library(tidyverse)
 library(lubridate)
 library(Cairo)
 
-ipf_lifts <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-10-08/ipf_lifts.csv")
+ipf_data <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-10-08/ipf_lifts.csv")
 
-write_csv(ipf_lifts, 'ipf_lifts.csv')
-
-df <- read_csv('ipf_lifts.csv')
-
-df_clean <- df %>% 
-  janitor::clean_names()
-
-df_clean %>% 
-  group_by(federation) %>% 
-  count(sort = TRUE)
 ```
-
-    ## # A tibble: 1 x 2
-    ##   federation     n
-    ##   <chr>      <int>
-    ## 1 IPF        41152
-
+   
 ``` r
 size_df <- df_clean %>% 
   select(name:weight_class_kg, starts_with("best"), place, date, federation, meet_name)  %>% 

@@ -36,7 +36,7 @@ gpu <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytu
 ram <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-09-03/ram.csv")
 ```
 
-Let’s see area over time.
+Let’s see number of transistors over time.
 
 ``` r
 ggplot(mapping = aes(date_of_introduction, transistor_count)) + 

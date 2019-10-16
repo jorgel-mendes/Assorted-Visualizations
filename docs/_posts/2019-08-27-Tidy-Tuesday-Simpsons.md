@@ -1,5 +1,5 @@
 ---
-title: "Tidy Tuesday 27/08/2019 Simpsons Guests"
+title: "Tidy Tuesday 27/08/2019 Simpsons Guest Stars"
 excerpt_separator: "<!--more-->"
 categories:
   - Tidy Tuesday

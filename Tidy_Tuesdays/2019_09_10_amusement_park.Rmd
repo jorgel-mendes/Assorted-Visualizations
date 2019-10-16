@@ -1,0 +1,117 @@
+---
+title: "Tidy Tuesday 10/09/2019"
+output:
+  github_document: 
+    df_print: tibble
+always_allow_html: yes
+---
+
+```{r opts, echo = FALSE}
+figs_path <- paste0(here::here("docs", "assets", "images"),"/")
+knitr::opts_chunk$set(
+  fig.path = figs_path
+)
+```
+
+# Data description
+
+From From [TidyTuesdays github](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-09-10):
+
+>This week's data is from data.world and the Safer Parks database.
+
+>A lot of free text this week, some inconsistent NAs (n/a, N/A) and dates (ymd, dmy). A good chance to do some data cleaning and then take a look at frequency, type of injury, and analyze free text.
+
+>Additional data can be found at SaferParks Database
+
+# Import data and packages
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(waffle)
+
+library(tidytext)
+library(wordcloud)
+
+tx_injuries <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-09-10/tx_injuries.csv")
+
+safer_parks <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-09-10/saferparks.csv")
+```
+
+# Look at data
+
+```{r mol_point, message=FALSE, warning=FALSE}
+safer_parks %>% glimpse()
+```
+
+Looking at the Source of accidents.
+
+```{r amp_waffle}
+(p <- safer_parks %>% 
+  summarise(
+    mech_count = sum(mechanical, na.rm = TRUE),
+    op_error_count = sum(op_error, na.rm = TRUE),
+    emp_count = sum(op_error, na.rm = TRUE)
+  ) %>% 
+  transmute(
+    total = sum(mech_count, op_error_count, emp_count),
+    `Each box is 1%` = 0,
+    Mechanical = round(mech_count/total, digits = 2)*100,
+    Operational = round(op_error_count/total, digits = 2)*100,
+    Employee = round(emp_count/total, digits = 2)*100,
+  ) %>% 
+  select(-total) %>% 
+  waffle(title = "Source of accidents in Amusement Parks",
+         colors = c("lightslategrey" , "#1b9e77", 
+                    "#d95f02", "#7570b3")) +
+   labs(caption = "Source: SaferParks ") +
+   theme(plot.title = element_text(size = 15,
+                                  face = "bold",
+                                  color = "darkslategrey",
+                                  margin = margin(0,0,0,0,'pt'),
+                                  hjust = 0.45),
+        legend.position = "top",
+        legend.margin = margin(0,0,0,0,'pt'),
+        legend.spacing = margin(0,0,0,0,'pt'),
+        legend.box.spacing = margin(0,1,1,1,'pt'),
+        plot.caption = element_text(size = 7,
+                                    color = "lightslategrey",
+                                    margin = margin(0,0,0,0,'pt')), 
+        legend.text = element_text(color = "darkslategrey")
+        ))
+```
+
+Now looking at the free test to see the most frequent words of the alleged injury reports
+
+```{r}
+tx_injuries %>% glimpse()
+```
+
+Let's create the barplot.
+
+```{r amp_bar, message=FALSE, warning=FALSE}
+tx_injuries %>% 
+  select(alleged_injury) %>% 
+  unnest_tokens("word", alleged_injury) %>% 
+  anti_join(stop_words) %>% 
+  count(word, sort = TRUE) %>% 
+  mutate(word = reorder(word,n)) %>% 
+  filter(word != 'NA') %>% 
+  top_n(10, n) %>% 
+  ggplot(aes(word, n)) +
+  geom_col(fill = "darkred") +
+  labs(title = "Most frequent words in alleged injury reports at amusement parks",
+       x = "Count",
+       y = "Word") +
+  scale_y_continuous(expand = c(0,0)) + 
+  coord_flip() +
+  theme_minimal() +
+  theme(
+    panel.grid.major.y = element_blank(),
+    plot.title = element_text(hjust = -.6,
+                              color = "darkslategrey"),
+    axis.text = element_text(color = 'darkslategrey'),
+    axis.title = element_text(color = 'darkslategrey')
+  )
+
+```
+

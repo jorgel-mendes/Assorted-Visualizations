@@ -1,0 +1,83 @@
+---
+title: "Tidy Tuesday 15/10/2019"
+output:
+  github_document: 
+    df_print: tibble
+always_allow_html: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r opts, echo = FALSE}
+figs_path <- paste0(here::here("docs", "assets", "images"),"/")
+knitr::opts_chunk$set(
+  fig.path = figs_path
+)
+```
+
+# Data description
+
+From From [TidyTuesdays github](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-10-15):
+
+>This week's data is from the EPA. The full data dictionary can be found at fueleconomy.gov.
+
+>It's essentially a much much larger and updated dataset covering mtcars, the dataset we all know a bit too well!
+
+>H/t to Ellis Hughes who had a recent blogpost covering this dataset.
+
+# Import data and packages
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(scales)
+library(Cairo)
+
+big_epa_cars <- read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-10-15/big_epa_cars.csv")
+
+```
+
+# Data 
+
+```{r}
+str(big_epa_cars)
+```
+
+```{r bic_point, message=FALSE, warning=FALSE, dev='CairoPNG'}
+big_epa_cars %>%
+  select(make, youSaveSpend, year, fuelType1) %>% 
+  group_by(make) %>% 
+  mutate(count = n()) %>% 
+  ungroup() %>% 
+  mutate(isSaving = factor(ifelse(
+    youSaveSpend > 0, "yes", "no"
+  ), levels = c("yes", "no"))) %>% 
+  ggplot(aes(year, youSaveSpend)) + 
+  geom_point(aes(color = isSaving), size = .3) +
+  geom_smooth(se = FALSE, color = "blue3", size = .7) +
+  labs(
+    title = "Some type of fuels are more associated with economical cars",
+    subtitle = "Gasoline cars are moving towards bigger savings",
+    y = "Savings compared to an average car over 5 years",
+    color = "Is saving?"
+  ) +
+  facet_wrap(~fuelType1)+
+  scale_color_manual(values = c("#01d28e", "#e25822")) + 
+  scale_y_continuous(label = number_format(scale = 1/1000, prefix = "$",
+                                         suffix = "k")) + 
+  guides(color = guide_legend(override.aes = list(size=1.3))) +
+  theme_dark() +
+  theme(
+    title = element_text(colour = "darkslategrey"),
+    legend.title = element_text(hjust = .5),
+    panel.grid = element_blank(),
+    legend.text = element_text(colour = "darkslategrey"),
+    axis.ticks = element_line(color = 'lightslategrey'),
+    axis.text = element_text(color = 'darkslategrey'),
+    axis.line = element_blank(),
+    axis.title.x = element_blank(), 
+    panel.background = element_rect(fill = "grey30"),
+    strip.background = element_rect(fill = "grey20")
+  ) 
+
+```
+
