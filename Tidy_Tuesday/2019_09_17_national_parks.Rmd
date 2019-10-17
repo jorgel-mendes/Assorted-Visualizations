@@ -1,0 +1,34 @@
+---
+title: "Tidy Tuesday 17/09/2019"
+output:
+  github_document: 
+    df_print: tibble
+always_allow_html: yes
+---
+
+```{r opts, echo = FALSE}
+figs_path <- paste0(here::here("docs", "assets", "images"),"/")
+knitr::opts_chunk$set(
+  fig.path = figs_path
+)
+```
+
+# Data description
+
+From From [TidyTuesdays github](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-09-10):
+
+>This week's data is from data.world and the Safer Parks database.
+
+>A lot of free text this week, some inconsistent NAs (n/a, N/A) and dates (ymd, dmy). A good chance to do some data cleaning and then take a look at frequency, type of injury, and analyze free text.
+
+>Additional data can be found at SaferParks Database
+
+# Import data and packages
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+
+tx_injuries <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-09-10/tx_injuries.csv")
+
+safer_parks <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-09-10/saferparks.csv")
+```
