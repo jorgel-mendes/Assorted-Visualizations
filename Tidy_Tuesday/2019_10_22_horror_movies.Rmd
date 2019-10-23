@@ -101,11 +101,12 @@ Then I create a table with the proportion of each of the selected categories.
   geom_bar(stat = "identity", width = 1, size = 1, color = "grey30") +
   geom_text(aes(label = percent(n, accuracy = 1)),
             position = position_stack(vjust = .55),
-            color = "snow") +
+            color = "snow", fontface = "bold") +
   labs(
     title = "Rejoice horror fans... \'cause it\'s thriller night", 
-    subtitle = "Thriller is the genre that most appears associated with horror at imdb",
-    fill ="Other category \nin horror movies"
+    subtitle = "Thriller was the genre that most appears associated with horror in 2011-2017",
+    fill ="Other category \nin horror movies",
+    caption = "Source: Imdb"
   ) +
   guides(fill = guide_legend(reverse = TRUE, override.aes = c(size = .5))) +
   scale_fill_manual(values = c("#FF8500", "#090714", "#792B17",
@@ -116,6 +117,8 @@ Then I create a table with the proportion of each of the selected categories.
     plot.background = element_rect(fill = "grey20"),
     plot.title = element_text(color = "snow", face = "bold"),
     plot.subtitle = element_text(color = "snow"),
+    plot.caption = element_text(color = "snow",
+                                hjust = 1.43),
     panel.grid = element_blank(),
     legend.background = element_rect(fill = "grey20",
                                      color = "grey20"),
