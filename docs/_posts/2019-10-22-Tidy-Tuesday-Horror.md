@@ -123,7 +123,7 @@ categories.
             position = position_stack(vjust = .55),
             color = "snow") +
   labs(
-    title = "Rejoice horror fans, \'cause it\'s thriller night", 
+    title = "Rejoice horror fans... \'cause it\'s thriller night", 
     subtitle = "Thriller is the genre that most appears associated with horror at imdb",
     fill ="Other category \nin horror movies"
   ) +
