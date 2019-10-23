@@ -84,7 +84,7 @@ most_common <- horror_token %>%
 
 Then I create a table with the proportion of each of the selected categories.
 
-```{r hom_pie}
+```{r hom_pie, dev = "png", dev.args=list(bg='transparent')}
  horror_token %>% 
   mutate(top = case_when(
     genre == "horror sci" ~ "Sci-fi",
