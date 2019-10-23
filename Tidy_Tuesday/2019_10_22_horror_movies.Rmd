@@ -105,7 +105,7 @@ Then I create a table with the proportion of each of the selected categories.
   labs(
     title = "Rejoice horror fans... \'cause it\'s thriller night", 
     subtitle = "Thriller was the genre that most appears associated with horror in 2011-2017",
-    fill ="Other category \nin horror movies",
+    fill ="Other genre in \nhorror movies",
     caption = "Source: Imdb"
   ) +
   guides(fill = guide_legend(reverse = TRUE, override.aes = c(size = .5))) +
@@ -118,7 +118,7 @@ Then I create a table with the proportion of each of the selected categories.
     plot.title = element_text(color = "snow", face = "bold"),
     plot.subtitle = element_text(color = "snow"),
     plot.caption = element_text(color = "snow",
-                                hjust = 1.43),
+                                hjust = 1.41),
     panel.grid = element_blank(),
     legend.background = element_rect(fill = "grey20",
                                      color = "grey20"),
