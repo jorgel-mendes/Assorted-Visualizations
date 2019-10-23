@@ -124,7 +124,7 @@ categories.
             color = "snow", fontface = "bold") +
   labs(
     title = "Rejoice horror fans... \'cause it\'s thriller night", 
-    subtitle = "Thriller was the genre that most appears associated with horror in 2011-2017",
+    subtitle = "Thriller was the genre that most appeared associated with horror in 2011-2017",
     fill ="Other genre in \nhorror movies",
     caption = "Source: Imdb"
   ) +
