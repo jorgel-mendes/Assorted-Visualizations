@@ -82,11 +82,11 @@ cran_code %>%
   geom_col(fill = "navyblue") +
   scale_y_continuous(expand = c(0,2)) +
   labs(
-    title = "Core tidyverse packages by number of R files",
+    title = "Number of R files for core tidyverse packages",
     subtitle = "ggplot2's the clear winner in this inception-like visualization",
     caption = "Source: CRAN",
     x = "Package name",
-    y = "Count"
+    y = "Number of R files"
   ) +
   coord_flip() +
   theme_bw() + 
