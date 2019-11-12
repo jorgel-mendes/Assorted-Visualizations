@@ -183,7 +183,7 @@ ggplot() +
   geom_segment(aes(x = 1 + .5/2, xend = 2-.5/2, y = .999, yend = .999),
                color = "white") +
   labs(
-    title = "Most squirrels are sppoted at ground level",
+    title = "Most squirrels are spoted at ground level",
     subtitle = "But the ones that are seen above can go really high",
     caption = "Source: NYC Squirrel Census"
   ) +
