@@ -1,0 +1,138 @@
+---
+title: "Tidy Tuesday 29/10/2019"
+output:
+  github_document: 
+    df_print: tibble
+always_allow_html: yes
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r opts, echo = FALSE}
+figs_path <- paste0(here::here("docs", "assets", "images"),"/")
+knitr::opts_chunk$set(
+  fig.path = figs_path
+)
+```
+
+# Data description
+
+From From [TidyTuesdays github](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-10-29):
+
+>This week's data is from the [NYC Squirrel Census](https://www.thesquirrelcensus.com/) - raw data at [NY Data portal](https://data.cityofnewyork.us/Environment/2018-Central-Park-Squirrel-Census-Squirrel-Data/vfnx-vebw).
+>
+H/t to [Sara Stoudt](https://twitter.com/sastoudt) for sharing this data, and [Mine Cetinkaya-Rundel](https://twitter.com/minebocek) for her [squirrel data package](https://github.com/mine-cetinkaya-rundel/nycsquirrels18) using the same data.
+>
+CityLab's [Linda Poon](https://twitter.com/linpoonsays) wrote an [article](https://www.citylab.com/life/2019/06/squirrel-census-results-population-central-park-nyc/592162/) using this data. 
+
+
+
+# Data importing
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+```
+
+Now reading the data (using RCurl because my connection with regular  curl is weird)
+```{r}
+nyc_squirrels <- readr::read_csv(RCurl::getURL("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-10-29/nyc_squirrels.csv"))
+```
+
+# Quick look
+```{r}
+glimpse(nyc_squirrels)
+```
+
+I'll look at how high the squirrels go.
+
+# How high care the squirrels?
+
+```{r}
+nyc_squirrels %>% 
+  select(location, above_ground_sighter_measurement) %>% 
+  summary()
+```
+
+Not a lot of sense in above_ground being a character, let's change that. And since I'll be making two bar plots it's easier to make two datasets.
+
+```{r message=FALSE, warning=FALSE}
+squirrels_above_below <- nyc_squirrels %>% 
+  select(location) %>% 
+  filter(!is.na(location)) %>% 
+  count(location, name = "location_prop") %>% 
+  mutate(location_prop = location_prop/sum(location_prop))
+
+squirrels_above_below
+```
+
+Now making a data frame for the squirrels sighter measurements.
+
+```{r}
+squirrels_sight_measures <- nyc_squirrels %>% 
+  filter(location == "Above Ground") %>% 
+  select(above_ground_sighter_measurement) %>% 
+  mutate(above_ground_sighter_measurement = parse_number(above_ground_sighter_measurement))
+
+squirrels_sight_measures %>% summary()
+```
+
+So the values have 50 NAs, and mostly distributed around 5 and 20.
+
+```{r}
+squirrels_sight_measures <- squirrels_sight_measures %>% 
+  mutate(height_category = case_when(
+    is.na(above_ground_sighter_measurement) ~ "Unknown",
+    above_ground_sighter_measurement < 5 ~ "0-5",
+    above_ground_sighter_measurement < 10 ~ "5-10",
+    above_ground_sighter_measurement < 15 ~ "10-15",
+    above_ground_sighter_measurement < 20 ~ "15-20",
+    above_ground_sighter_measurement >= 20 ~ ">20"
+  ),
+  height_category = factor(height_category, levels = c("Unknown", "0-5", "5-10", 
+                                                  "10-15", "15-20", ">20"),
+                           ordered = TRUE)
+  ) %>% 
+  count(height_category, name = "above_prop") %>% 
+  mutate(above_prop = above_prop/sum(above_prop))
+```
+
+
+Great, so now I'll make a stacked bar chart.
+
+```{r sqc_bar}
+ggplot() +
+  geom_col(data = squirrels_above_below,
+           aes(x = 1, y = location_prop, fill = location),
+           position ="fill", width = .5, color = "white") +
+  geom_text(data = squirrels_above_below, 
+            aes(x = 1, y = location_prop,  label = location, group = location),
+            color = "white", position = position_stack(.8, reverse = FALSE)) +
+  geom_col(data = squirrels_sight_measures, 
+           aes(x = 2, y = above_prop, fill = height_category), 
+           position = position_fill(reverse = TRUE), width = .5, color = "white") + 
+  geom_text(data = squirrels_sight_measures,
+           aes(x = 2, y = above_prop, label = scales::percent(above_prop)),
+           color = "white", position = position_stack(.5)) + 
+  geom_segment(data = squirrels_above_below %>% filter(location == "Ground Plane"), 
+               aes(x = 1 + .5/2, xend = 2-.5/2, y = location_prop, yend = 0),
+               color = "white") +
+  geom_segment(aes(x = 1 + .5/2, xend = 2-.5/2, y = .999, yend = .999),
+               color = "white") +
+  labs(
+    title = "Most squirrels are sppoted at ground level",
+    subtitle = "But the ones that are seen above can go really high",
+    caption = "Source: NYC Squirrel Census"
+  ) +
+  scale_fill_manual("Height of\n sighting",
+                    values = c(">20" = "#08519c", "15-20" = "#3182bd",
+                               "10-15" = "#6baed6", "5-10" = "#9ecae1",
+                               "0-5" = "#c6dbef", "Unknown" = "grey60",
+                               "Above Ground" = "darkblue",
+                               "Ground Plane" = "grey30"),
+                    breaks=c(">20", "15-20", "10-15", "5-10", "0-5",
+                             "Unknown", NULL, NULL)) +
+  scale_y_continuous(NULL, labels = scales::percent) +
+  scale_x_continuous(NULL, labels = NULL, breaks = NULL, expand = c(.1,.1)) +
+    theme(panel.background = element_rect(fill = "grey10"),
+          panel.grid = element_blank())  
+```
+

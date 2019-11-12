@@ -7,5 +7,6 @@ _site
 .jekyll-metadata
 Gemfile.lock
 *.csv
+*.rds
 Exercise1.png
 behold-the-vision.Rproj

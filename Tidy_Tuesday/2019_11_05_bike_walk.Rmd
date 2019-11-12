@@ -1,0 +1,25 @@
+---
+title: "Tidy Tuesday 22/10/2019"
+output:
+  github_document: 
+    df_print: tibble
+always_allow_html: yes
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r opts, echo = FALSE}
+figs_path <- paste0(here::here("docs", "assets", "images"),"/")
+knitr::opts_chunk$set(
+  fig.path = figs_path
+)
+```
+
+# Data description
+
+From From [TidyTuesdays github](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-10-22):
+
+```{r}
+commute_mode <- readr::read_csv(RCurl::getURL("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-11-05/commute.csv"))
+readr::write_rds(commute_mode, "/home/jorge/Documentos/Behold-the-Vision/Tidy_Tuesday/commute_mode.rds")
+```
