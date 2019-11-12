@@ -1,0 +1,93 @@
+---
+title: "Tidy Tuesday 12/11/2019"
+output:
+  github_document: 
+    df_print: tibble
+always_allow_html: yes
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r opts, echo = FALSE}
+figs_path <- paste0(here::here("docs", "assets", "images"),"/")
+knitr::opts_chunk$set(
+  fig.path = figs_path
+)
+```
+
+# Data description
+
+From From [TidyTuesdays github](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-11-12):
+
+>This week's data is from the [CRAN](https://cran.r-project.org/src/contrib/) courtesy of [Phillip Massicotte](https://www.pmassicotte.com/post/analyzing-the-programming-languages-used-in-r-packages/).
+>
+He analyzed the lines of code and the different languages in all of the R packages on CRAN.
+
+# Packages and data reading
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+
+cran_code <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-11-12/loc_cran_packages.csv")
+```
+
+# Quick look
+
+```{r}
+cran_code %>% glimpse()
+```
+
+Only one version of the packages?
+
+```{r}
+cran_code %>% 
+  select(pkg_name, version) %>% 
+  distinct() %>% 
+  group_by(pkg_name) %>% 
+  count(version) %>% 
+  filter(n>1)
+```
+
+With this out of our way I think I'll look into the tidyverse packages.
+
+```{r coc_bar}
+cran_code %>% 
+  filter(
+    pkg_name %in% c(
+      "ggplot2",
+      "dplyr",
+      "tidyr",
+      "readr",
+      "purrr",
+      "tibble",
+      "stringr",
+      "focats"
+    ),
+    language == "R"
+  ) %>% 
+  count(pkg_name, wt = file, sort = TRUE) %>% 
+  mutate(pkg_name = fct_reorder(pkg_name, n)) %>% 
+  ggplot(aes(pkg_name, n)) +
+  geom_col(fill = "navyblue") +
+  scale_y_continuous(expand = c(0,2)) +
+  labs(
+    title = "Core tidyverse packages by number of R files",
+    subtitle = "ggplot2's the clear winner in this inception-like visualization",
+    caption = "Source: CRAN",
+    x = "Package name",
+    y = "Count"
+  ) +
+  coord_flip() +
+  theme_bw() + 
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        strip.background = element_blank(),
+        strip.placement = 'outside',
+        panel.border = element_rect(color = 'lightslategrey'),
+        title = element_text(colour = "slategrey"),
+        strip.text = element_text(color = 'slategrey'),
+        axis.ticks = element_line(color = 'lightslategrey'),
+        axis.text = element_text(color = 'slategrey'))
+
+```
+
