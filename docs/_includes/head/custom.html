@@ -1,5 +1,11 @@
-{%- if page.visNetwork -%}	
+{%- if page.visNetwork -%}
 	<!-- Require visNetwork -->
-	{%- include visNetwork.html -%}	
+	{%- include visNetwork.html -%}
+	<!-- End visNetwork -->
+{%- endif -%}
+
+{%- if page.altair -%}
+	<!-- Require visNetwork -->
+	{%- include altair.html -%}
 	<!-- End visNetwork -->
 {%- endif -%}
