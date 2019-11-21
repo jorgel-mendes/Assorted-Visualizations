@@ -2,7 +2,9 @@
 .Rhistory
 .RData
 .Ruserdata
-_site
+_site/
 .sass-cache
 .jekyll-metadata
 Gemfile.lock
+.ipynb_checkpoints/
+_posts/.ipynb_checkpoints/
