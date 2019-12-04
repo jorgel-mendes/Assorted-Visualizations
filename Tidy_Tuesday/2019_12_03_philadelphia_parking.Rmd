@@ -1,0 +1,131 @@
+---
+title: "Tidy Tuesday 03/02/2019"
+output:
+  github_document: 
+    df_print: tibble
+always_allow_html: yes
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r opts, echo = FALSE}
+figs_path <- paste0(here::here("docs", "assets", "images"),"/")
+knitr::opts_chunk$set(
+  fig.path = figs_path
+)
+```
+
+# Data description
+
+From From [TidyTuesdays github](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-12-03):
+
+>This week's data is from [Open Data Philly](https://www.opendataphilly.org/dataset/parking-violations) - there is over 1 GB of data, but I have filtered it down to <100 MB due to GitHub restrictions. I accomplished this mainly by filtering to data for only 2017 in Pennsylvania that had lat/long data. If you would like to use the entire dataset, please see the link above.
+>
+H/t to [Jess Streeter](https://twitter.com/phillynerd) for sharing this week's data!
+>
+Some visualizations from [Philly Open Data](https://data.phila.gov/visualizations/parking-violations) and a news article by [NBC Philadelphia](https://www.nbcphiladelphia.com/news/local/Nearly-6-Million-Philadelphia-Parking-Authority-Tickets-Are-on-the-Rise-Since-2016-565438131.html).
+
+# Packages and data reading
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(patchwork)
+
+tickets <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-12-03/tickets.csv")
+
+```
+
+# Quick look
+
+```{r}
+tickets %>% glimpse()
+```
+
+How many types of violations?
+
+```{r phi_poi-1, dev='CairoPNG'}
+means <- tickets %>% 
+  filter(!is.na(issuing_agency)) %>% 
+  group_by(issuing_agency) %>% 
+  summarise(mean_fine = mean(fine)) %>%
+  mutate(housing_ppa = ifelse(issuing_agency %in% c('HOUSING', 'PPA'),
+                              'Y', 'N')) %>% 
+  ggplot(aes(reorder(issuing_agency, mean_fine), mean_fine, 
+             color = housing_ppa)) +
+  geom_point(size = 4) +
+  labs(
+    title = 'Housing fines are high',
+    subtitle = 'While PPA\'s bottom in value',
+    x = 'Issuing Agency',
+    y = 'Average fine value'
+  ) +
+  coord_flip() +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  scale_color_manual(values = c('darkslategrey', 'navyblue'), guide = FALSE) +
+  theme_bw() + 
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor = element_blank(),
+        strip.background = element_blank(),
+        strip.placement = 'outside',
+        panel.border = element_rect(color = 'lightslategrey'),
+        title = element_text(colour = "darkslategrey"),
+        strip.text = element_text(color = 'slategrey'),
+        axis.ticks = element_line(color = 'lightslategrey'),
+        axis.text = element_text(color = 'slategrey'))
+
+means
+```
+
+
+```{r phi_poi-2, dev='CairoPNG'}
+total_log <- tickets %>% 
+  filter(!is.na(issuing_agency)) %>%
+  group_by(issuing_agency) %>% 
+  summarise(sum_fine = sum(fine)) %>%
+  mutate(housing_ppa = ifelse(issuing_agency %in% c('HOUSING', 'PPA'),
+                              'Y', 'N')) %>% 
+  ggplot(aes(reorder(issuing_agency, sum_fine), sum_fine,
+             color = housing_ppa)) +
+  geom_point(size = 4) +
+  labs(
+    title = 'But PPA collects more money',
+    subtitle = 'More than 100 times Housing\'s',
+    x = NULL,
+    y = 'Total collected (log scale)'
+  ) + 
+  coord_flip() +
+  scale_y_log10(labels = scales::label_number_si(prefix = '$')) +
+  scale_color_manual(values = c('darkslategrey', 'navyblue'), guide = FALSE) +
+  theme_bw() + 
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor = element_blank(),
+        strip.background = element_blank(),
+        strip.placement = 'outside',
+        panel.border = element_rect(color = 'slategrey'),
+        title = element_text(colour = "darkslategrey"),
+        strip.text = element_text(color = 'slategrey'),
+        axis.ticks = element_line(color = 'lightslategrey'),
+        axis.text = element_text(color = 'slategrey'))
+
+total_log
+```
+
+
+Using patchwork to get the plots together.
+
+```{r phi_poi-3, dev='CairoPNG'}
+final_plot <- means + total_log +
+  plot_annotation(
+    title = 'Volume > Value when talking abour Parking Violation Fines',
+    subtitle = 'In Philadelphia PPA collects more money from parking tickets besides lowest value for fines issued',
+    caption = 'Data from Open Data Philly for 2017',
+    theme = theme(
+      plot.title = element_text(color = 'darkslategrey'),
+      plot.subtitle = element_text(color = 'darkslategrey'),
+      plot.caption = element_text(color = 'lightslategrey')
+      )
+    )
+
+final_plot
+```
+
