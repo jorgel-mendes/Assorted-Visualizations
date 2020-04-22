@@ -649,9 +649,3 @@ final_chart
 
 
 ![Static](https://raw.githubusercontent.com/jorgel-mendes/Behold-the-Vision/master/docs/assets/images/2019_11_04_MM.png)
-
-
-
-Command to write the markdown used to make the site version easier. 
-
-`jupyter nbconvert --to markdown 2019_45_lasvegas.ipynb`
