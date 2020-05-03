@@ -1,0 +1,80 @@
+---
+title: "Tidy Tuesday 17/12/2019"
+output:
+  github_document: 
+    df_print: tibble
+always_allow_html: yes
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r opts, echo = FALSE}
+figs_path <- paste0(here::here("docs", "assets", "images"),"/")
+knitr::opts_chunk$set(
+  fig.path = figs_path
+)
+```
+
+# Data description
+
+From From [TidyTuesdays github](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-12-17):
+
+>This week’s data is from [The Pudding](https://github.com/the-pudding/data/blob/master/dog-shelters/README.md). The data was cleaned, collected and story written by [Amber Thomas](https://twitter.com/proquesasker), with design by [Sacha Maxim](https://twitter.com/sacha_maxim).
+>
+Their article [Finding Forever Homes](https://pudding.cool/2019/10/shelters/) examines data on all adoptable dogs from [Petfinder.com](https://www.petfinder.com/) in the USA on `2019-09-20`.
+>
+There are a number of datasets, where the `dog_travel` and `dog_descriptions` datasets can be joined via the common id column.
+>
+The premise of the story in Amber's own words:
+>
+>> "If you’re looking to add a new furry friend to your family, you may be encouraged to “adopt not shop”. That is, to find a new dog at a local shelter or rescue organization rather than a pet store or breeder.
+>> 
+>> But where do adoptable dogs come from?"
+
+# Packages and data reading
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(tidytext)
+
+dog_travel <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-12-17/dog_travel.csv')
+dog_descriptions <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-12-17/dog_descriptions.csv')
+```
+
+# Quick look
+
+```{r}
+dog_travel %>% glimpse()
+```
+
+```{r}
+dog_descriptions %>% glimpse()
+```
+
+Looking for differences between the dogs that did and didn't travel.
+
+# Data preparation
+
+First identify in the description data frame which ones travelled and not.
+```{r}
+dog_descriptions %>% 
+  select(id, description) %>% 
+  drop_na() %>% 
+  mutate(from_travel = ifelse(id %in% dog_travel$id,"yes", "no")) %>% 
+  unnest_tokens(word, description) %>% 
+  count(from_travel, word, sort = TRUE) %>% 
+  anti_join(stop_words) %>%
+  bind_tf_idf(word, from_travel, n) %>% 
+  arrange(desc(tf_idf)) %>% 
+  mutate(word = factor(word, levels = rev(unique(word)))) %>% 
+  group_by(from_travel) %>% 
+  top_n(5) %>% 
+  ungroup() %>%
+  ggplot(aes(word, tf_idf, fill = from_travel)) +
+  geom_col(show.legend = FALSE) +
+  labs(x = NULL, y = "tf-idf") +
+  facet_wrap(~from_travel, ncol = 2, scales = "free") +
+  coord_flip()
+
+```
+
