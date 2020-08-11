@@ -70,7 +70,7 @@ zuko_words <- avatar %>%
 ```
 # Function with full highlight
 
-Objects are terribly named :(. Look into it later.
+Function is messy :(. Look into it later.
 
 ```{r}
 highlighted_terms <- list(
@@ -83,19 +83,22 @@ highlighted_terms <- list(
 palette_list <- c("WaterTribe", "EarthKingdom", "FireNation", "FireNation")
 
 
-plot_part <- unique(zuko_words$zuko_journey)
+zuko_plot <- unique(zuko_words$zuko_journey)
 
 plot_maker <- function(plot_number, highlighted_part = 0){
   
+  #helper to make sure plots 3 and 4 display colors as intended
   is_selected_levels <- if(plot_number < 3) c("TRUE", "FALSE") else c("FALSE", "TRUE")
   
   plot_palette <- avatar_pal(palette = palette_list[plot_number])(2)
+  #helper to make sure plots 3 and 4 display colors as intended
   plot_palette <-   if(plot_number < 3) plot_palette else rev(plot_palette)
-
-  is_selected_column <- if(highlighted_part == 0 | highlighted_part == plot_part[plot_number]) quo(is_selected) else quo(NULL)
+  
+  #filtering only if there's a highlight in the plot
+  is_selected_column <- if(highlighted_part == 0 | highlighted_part == zuko_plot[plot_number]) quo(is_selected) else quo(NULL)
   
   plot_df <- zuko_words %>% 
-    filter(zuko_journey == plot_part[plot_number]) %>% 
+    filter(zuko_journey == zuko_plot[plot_number]) %>% 
     count(word, sort = TRUE) %>%
     slice(1:7) %>% 
     ungroup() %>% 
@@ -103,38 +106,45 @@ plot_maker <- function(plot_number, highlighted_part = 0){
                                 is_selected_levels),
            word = reorder(word, n))
   
-  plot_plot <- plot_df %>% 
+  plot_object <- plot_df %>% 
     ggplot(aes(x = n, y = word, fill = !!is_selected_column)) +
     geom_col(aes_string()) +
     scale_fill_manual(guide = NULL, values = plot_palette) +
     scale_y_reordered() +
     scale_x_continuous(expand = expansion(mult=c(.01, .1))) +
-    labs(title = plot_part[plot_number],
+    labs(title = zuko_plot[plot_number],
          x = "Count",
          y = "Words Spoken") +
     theme_avatar(title.size = 14,
                  axis.text.size = 9,
                  axis.title.size = 11) 
   
-  if(highlighted_part == 0 | highlighted_part == plot_part[plot_number]){
+  if(highlighted_part == 0 | highlighted_part == zuko_plot[plot_number]){
   
-    plot_plot <- plot_plot + gghighlight(word %in% highlighted_terms[[plot_number]],
+    plot_object <- plot_object + gghighlight(word %in% highlighted_terms[[plot_number]],
                 unhighlighted_params = list(
                   fill = alpha(plot_palette[2], alpha = .2))
     )
   }
   
-  plot_plot
+  plot_object
   
 }
 
 
+```
+
+Complete colored plot
+
+```{r}
+#makes all 4 plots
 avatar_plots <- map(1:4, plot_maker)
 
 complete_plot <- (avatar_plots[[1]] + avatar_plots[[2]]) / (avatar_plots[[3]] + avatar_plots[[4]]) +
   plot_annotation(
     title = "Zuko's most common words changed as his plot progressed",
     subtitle = "But Uncle Iroh remained constant",
+    caption = "By @jorgelsm for #TidyTuesday",
     theme = theme(
       plot.background = element_rect(color = NA, 
         fill = "#ece5d3"), 
@@ -145,15 +155,18 @@ complete_plot <- (avatar_plots[[1]] + avatar_plots[[2]]) / (avatar_plots[[3]] + 
 complete_plot
 ```
 
-Calling for individual plots.
+
+
+Calling for partial highlighted plots. Changing the value of zuko_plot changes the colored plot.
 
 ```{r}
-avatar_plots <- map(1:4, plot_maker, plot_part[1])
+avatar_plots <- map(1:4, plot_maker, zuko_plot[4])
 
-complete_plot <- (avatar_plots[[1]] + avatar_plots[[2]]) / (avatar_plots[[3]] + avatar_plots[[4]]) +
+partial_plot <- (avatar_plots[[1]] + avatar_plots[[2]]) / (avatar_plots[[3]] + avatar_plots[[4]]) +
   plot_annotation(
     title = "Zuko's most common words changed as his plot progressed",
     subtitle = "But Uncle Iroh remained constant",
+    caption = "By @jorgelsm for #TidyTuesday",
     theme = theme(
       plot.background = element_rect(color = NA, 
         fill = "#ece5d3"), 
@@ -161,16 +174,18 @@ complete_plot <- (avatar_plots[[1]] + avatar_plots[[2]]) / (avatar_plots[[3]] + 
         fill = "#ece5d3")
     )
   )
-complete_plot
-```
 
-* For #TidyTuesday with Last Airbender data I've decided to make a plot from the, probably, most interesting character arch in the cartoon, Zuko's.
+partial_plot
+```
+# Twitter text
+
+* For #TidyTuesday with Last Airbender data I've decided to make a plot from my favorite character arch in the cartoon, Zuko's.
 I separated his plot into some parts and highlighted few words that I felt important for each section.
 
-* Water - In the first book most of the words are related to his search and current state, like avatar and ship. Uncle is from the beginning a powerful presence in his life.
+* In the first book most of the words are related to his search and current state, such as avatar and ship. Uncle Iroh is from the beginning a powerful presence in his life.
 
-* In Book 2 we can see the start of his personal conflict. Azula and tea represent the paths in front of him. She is the connection to the Fire nation, whom he envies and is pursued by. While tea represents his uncle's desire for a more peaceful life.
+* In Book 2 we can see the start of his personal conflict. Azula and tea represent the paths in front of him. Azula, whom he envies and pursues him, is his connection to his past. While tea represents his uncle's desire for a more peaceful life, opening a tea shop.
 
-* On the first half of fire book his relationship and worries about his father are more present. He questions his place of the fire nation and its existence.
+* On the first half of Fire book his relationship and worries about his father are more present. He questions his place of the fire nation and its existence.
 
-* In the second half the role of fire nation and firebending is addressed. His uncle and dad are now representing the path he's chosen and the one he's left behind.
+* In the second half, the role of fire nation and firebending are addressed. His uncle and dad now represents the path he's chosen and the one he's left behind.
