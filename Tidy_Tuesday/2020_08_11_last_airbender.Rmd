@@ -1,0 +1,176 @@
+---
+title: "The Last Airbender"
+author: "Jorge Mendes"
+date: "10/08/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Tidy tuesday last airbender
+
+```{r}
+library(tidyverse)
+library(tidytext)
+library(stopwords)
+library(gghighlight)
+library(tvthemes)
+library(patchwork)
+
+avatar <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-08-11/avatar.csv')
+
+```
+
+
+Reading data from Zuko
+
+```{r}
+data("stop_words")
+
+avatar_words <- avatar %>% 
+  select(book, chapter, chapter_num, character,
+         character_words, imdb_rating) %>% 
+  filter(character != "Scene Description") %>% 
+  group_by(book) %>% 
+  mutate(line_num = row_number()) %>% 
+  ungroup() %>% 
+  unnest_tokens(word, character_words) %>% 
+  anti_join(stop_words)
+```
+# Dataframe of Zuko words
+
+```{r}
+zuko_words <- avatar %>% 
+  filter(character == "Zuko") %>% 
+  mutate(zuko_journey = case_when(
+    book == "Water" ~ 'Search for the Avatar\n(Book 1)',
+    book == "Earth" ~ 'Traitor of the Fire Nation\n(Book 2)',
+    book == "Fire" & chapter_num <= 11 ~ 'Prince of the Fire Nation\n(Book 3 Episodes 1-11)',
+    TRUE ~ "Avatar's teacher\n(Book 3 Episodes 11-24)"
+  ),
+  zuko_journey = factor(zuko_journey, 
+                        c('Search for the Avatar\n(Book 1)', 
+                          'Traitor of the Fire Nation\n(Book 2)',
+                          'Prince of the Fire Nation\n(Book 3 Episodes 1-11)', 
+                          "Avatar's teacher\n(Book 3 Episodes 11-24)"))) %>% 
+  select(chapter, chapter_num, zuko_journey,
+         character_words, imdb_rating) %>% 
+  group_by(zuko_journey) %>% 
+  mutate(line_num = row_number()) %>% 
+  ungroup() %>% 
+  unnest_tokens(word, character_words) %>% 
+  anti_join(stop_words)
+
+#Water - Hunt for the avatar
+#Earth - Fugitive
+#Fire - Prince of the fire nation 11-
+#Fire - Avatar's firebending teacher 11-21
+```
+# Function with full highlight
+
+Objects are terribly named :(. Look into it later.
+
+```{r}
+highlighted_terms <- list(
+  c("uncle", "avatar", "home"),
+  c("tea", "azula"),
+  c("father", "uncle", "dad"),
+  c("fire", "uncle", "father", "firebending")
+  
+)
+palette_list <- c("WaterTribe", "EarthKingdom", "FireNation", "FireNation")
+
+
+plot_part <- unique(zuko_words$zuko_journey)
+
+plot_maker <- function(plot_number, highlighted_part = 0){
+  
+  is_selected_levels <- if(plot_number < 3) c("TRUE", "FALSE") else c("FALSE", "TRUE")
+  
+  plot_palette <- avatar_pal(palette = palette_list[plot_number])(2)
+  plot_palette <-   if(plot_number < 3) plot_palette else rev(plot_palette)
+
+  is_selected_column <- if(highlighted_part == 0 | highlighted_part == plot_part[plot_number]) quo(is_selected) else quo(NULL)
+  
+  plot_df <- zuko_words %>% 
+    filter(zuko_journey == plot_part[plot_number]) %>% 
+    count(word, sort = TRUE) %>%
+    slice(1:7) %>% 
+    ungroup() %>% 
+    mutate(is_selected = factor(word %in% highlighted_terms[[plot_number]],
+                                is_selected_levels),
+           word = reorder(word, n))
+  
+  plot_plot <- plot_df %>% 
+    ggplot(aes(x = n, y = word, fill = !!is_selected_column)) +
+    geom_col(aes_string()) +
+    scale_fill_manual(guide = NULL, values = plot_palette) +
+    scale_y_reordered() +
+    scale_x_continuous(expand = expansion(mult=c(.01, .1))) +
+    labs(title = plot_part[plot_number],
+         x = "Count",
+         y = "Words Spoken") +
+    theme_avatar(title.size = 14,
+                 axis.text.size = 9,
+                 axis.title.size = 11) 
+  
+  if(highlighted_part == 0 | highlighted_part == plot_part[plot_number]){
+  
+    plot_plot <- plot_plot + gghighlight(word %in% highlighted_terms[[plot_number]],
+                unhighlighted_params = list(
+                  fill = alpha(plot_palette[2], alpha = .2))
+    )
+  }
+  
+  plot_plot
+  
+}
+
+
+avatar_plots <- map(1:4, plot_maker)
+
+complete_plot <- (avatar_plots[[1]] + avatar_plots[[2]]) / (avatar_plots[[3]] + avatar_plots[[4]]) +
+  plot_annotation(
+    title = "Zuko's most common words changed as his plot progressed",
+    subtitle = "But Uncle Iroh remained constant",
+    theme = theme(
+      plot.background = element_rect(color = NA, 
+        fill = "#ece5d3"), 
+      panel.background = element_rect(color = NA, 
+        fill = "#ece5d3")
+    )
+  )
+complete_plot
+```
+
+Calling for individual plots.
+
+```{r}
+avatar_plots <- map(1:4, plot_maker, plot_part[1])
+
+complete_plot <- (avatar_plots[[1]] + avatar_plots[[2]]) / (avatar_plots[[3]] + avatar_plots[[4]]) +
+  plot_annotation(
+    title = "Zuko's most common words changed as his plot progressed",
+    subtitle = "But Uncle Iroh remained constant",
+    theme = theme(
+      plot.background = element_rect(color = NA, 
+        fill = "#ece5d3"), 
+      panel.background = element_rect(color = NA, 
+        fill = "#ece5d3")
+    )
+  )
+complete_plot
+```
+
+* For #TidyTuesday with Last Airbender data I've decided to make a plot from the, probably, most interesting character arch in the cartoon, Zuko's.
+I separated his plot into some parts and highlighted few words that I felt important for each section.
+
+* Water - In the first book most of the words are related to his search and current state, like avatar and ship. Uncle is from the beginning a powerful presence in his life.
+
+* In Book 2 we can see the start of his personal conflict. Azula and tea represent the paths in front of him. She is the connection to the Fire nation, whom he envies and is pursued by. While tea represents his uncle's desire for a more peaceful life.
+
+* On the first half of fire book his relationship and worries about his father are more present. He questions his place of the fire nation and its existence.
+
+* In the second half the role of fire nation and firebending is addressed. His uncle and dad are now representing the path he's chosen and the one he's left behind.
