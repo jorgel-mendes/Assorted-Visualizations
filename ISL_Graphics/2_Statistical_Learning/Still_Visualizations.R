@@ -88,7 +88,9 @@ pred_function <- function(x1, x2){
 y_Income <- outer(x_Education, x_Seniority, pred_function) 
 
 #For windows users cairo makes the plot looks more sharp
-Cairo(file = 'plot.png', type = 'png', bg = 'snow') 
+Cairo::CairoWin()
+#Cairo(file = 'plot.png', type = 'png', bg = 'snow') 
+
 point_pmat <- persp(x = x_Education, y = x_Seniority, z = y_Income, 
       theta = 45, phi = 35, col = 'dodgerblue3', xlab = 'Years of Education',
       ylab = 'Seniority', zlab = 'Income')

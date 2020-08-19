@@ -1,0 +1,72 @@
+---
+title: "Chapter 3 - Javascript Visualizations"
+author: "Jorge Mendes"
+date: "18/08/2020"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Chapter 3 - Javascript Visualizations
+
+```{r}
+library(tidyverse)
+library(plotly)
+```
+
+
+## Figure 3.2
+
+I'll user echarts for the 
+
+### Data for plots
+
+```{r}
+Advertising <- read_csv('http://faculty.marshall.usc.edu/gareth-james/ISL/Advertising.csv',
+                        col_types = cols(X1 = col_skip()))
+
+model_3_2 <- Advertising %>% 
+  lm(sales ~ TV, data = .) %>% 
+  coef()
+
+B0 <- seq(4.9, 9.1, length.out = 50)
+B1 <- seq(0.027, 0.067, length.out = 50)
+
+### Left plot. Contour
+
+plot_ly() %>% 
+  add_contour(z = RSS_surface, x=B0, y=B1,
+              autocolorscale = FALSE, 
+              colorscale = "Blues") %>% 
+  add_markers(x = model_3_2[1], y = model_3_2[2],
+              marker = list(color = "red"), 
+              name = "Linear model\n coefficients")
+
+
+```
+
+### Right plot - 3d surface
+
+```{r}
+RSS_function <- function(intercept, slope){
+  sum((Advertising$sales -intercept  -slope*Advertising$TV)^2)
+}
+
+data_3_2 <- expand_grid(B0, B1) %>% 
+  rowwise() %>% 
+  mutate(RSS_values = RSS_function(B0, B1))
+
+RSS_surface <- outer(B0, B1, FUN = Vectorize(RSS_function))
+
+plot_ly() %>% 
+  add_surface(x = B0, y = B1, z = RSS_surface, 
+              showscale = FALSE,autocolorscale = FALSE, 
+              colorscale = "Blues") %>% 
+  add_markers(x = model_3_2[1], y = model_3_2[2], 
+              z = RSS_function(model_3_2[1], model_3_2[2]),
+              marker = list(color = "red"), 
+              name = "Linear model\n coefficients")
+```
+

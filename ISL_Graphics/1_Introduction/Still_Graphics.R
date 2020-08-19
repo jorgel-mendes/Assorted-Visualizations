@@ -1,5 +1,6 @@
 library(ISLR)
 library(tidyverse)
+#MASS required but not loaded
 
 # Figure 1.1 Wage data
 data(Wage)
@@ -65,7 +66,6 @@ Smarket %>%
 
 
 #Figure 1.3 qda Smarket
-
 model_qda <- Smarket %>% 
   filter(Year < 2005) %>% 
   MASS::qda(Direction~Lag1+Lag2, data = .)
