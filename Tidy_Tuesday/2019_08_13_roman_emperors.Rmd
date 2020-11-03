@@ -24,9 +24,9 @@ From From [TidyTuesdays github](https://github.com/rfordatascience/tidytuesday/t
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
 library(treemapify)
-# emperors <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-08-13/emperors.csv")
+emperors <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-08-13/emperors.csv")
 # readr::write_csv(emperors, "emperors.csv")
-emperors <- readr::read_csv("emperors.csv")
+# emperors <- readr::read_csv("emperors.csv")
 ```
 
 # Data 
