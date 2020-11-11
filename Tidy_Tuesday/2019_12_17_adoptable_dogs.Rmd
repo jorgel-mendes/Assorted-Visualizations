@@ -35,6 +35,7 @@ The premise of the story in Amber's own words:
 
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
+library(waffle)
 library(tidytext)
 
 dog_travel <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-12-17/dog_travel.csv')
@@ -51,30 +52,36 @@ dog_travel %>% glimpse()
 dog_descriptions %>% glimpse()
 ```
 
-Looking for differences between the dogs that did and didn't travel.
 
-# Data preparation
+# Dog breed
 
-First identify in the description data frame which ones travelled and not.
+
 ```{r}
 dog_descriptions %>% 
-  select(id, description) %>% 
-  drop_na() %>% 
-  mutate(from_travel = ifelse(id %in% dog_travel$id,"yes", "no")) %>% 
-  unnest_tokens(word, description) %>% 
-  count(from_travel, word, sort = TRUE) %>% 
-  anti_join(stop_words) %>%
-  bind_tf_idf(word, from_travel, n) %>% 
-  arrange(desc(tf_idf)) %>% 
-  mutate(word = factor(word, levels = rev(unique(word)))) %>% 
-  group_by(from_travel) %>% 
-  top_n(5) %>% 
-  ungroup() %>%
-  ggplot(aes(word, tf_idf, fill = from_travel)) +
-  geom_col(show.legend = FALSE) +
-  labs(x = NULL, y = "tf-idf") +
-  facet_wrap(~from_travel, ncol = 2, scales = "free") +
-  coord_flip()
-
+  select(starts_with("breed")) %>% 
+  transmute(breed_category = case_when(
+    breed_unknown ~ "Unknown Breed",
+    breed_mixed ~ "Mixed Breed",
+    TRUE ~ "Pure Breed"
+  )) %>% 
+  count(breed_category) %>% 
+  mutate(n = round(n/sum(n)*100)) %>% 
+  ggplot(aes(label = breed_category, values = n)) +
+  geom_pictogram(aes(color = breed_category),
+                 n_rows = 10, size =6,
+                 family = "Font Awesome 5 Free Solid") +
+  scale_label_pictogram(values = c("dog", "dog")) +
+  scale_color_brewer(type = "qualitative", palette = "Pastel1") +
+  hrbrthemes::theme_ipsum_rc(grid="") +
+  theme_enhance_waffle() +
+  labs(
+    color = "",
+    label = "",
+    title = "Breed of adoptable dogs on Petfinder",
+    caption = "by @jorgelsm for #TidyTuesday"
+  ) +
+  theme(legend.position = "top",
+        legend.box.spacing = element_blank(),
+        text = element_text(color = "gray30"))
 ```
 
