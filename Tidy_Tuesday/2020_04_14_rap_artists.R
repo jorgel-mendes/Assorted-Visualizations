@@ -18,6 +18,7 @@ plots_themes <-   theme_bw() +
         strip.background = element_blank(),
         panel.border = element_rect(color = 'slategrey'),
         title = element_text(colour = "darkslategrey"),
+        plot.title.position = "plot",
         strip.text = element_text(color = 'darkslategrey'),
         axis.ticks.x = element_line(color = 'lightslategrey'),
         axis.ticks.y = element_blank(),
